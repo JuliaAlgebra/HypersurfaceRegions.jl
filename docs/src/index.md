@@ -16,11 +16,12 @@ For hyperplane arrangements, each chamber is
 uniquely characterized by its sign vector. However, in our situation, each sign vector $\sigma$ typically
 corresponds to multiple connected components.
 
-## Example 
+## Example: two concentric circles
 
 Let us consider two concentric circles. For instance, we could take the two circles $f_1 = x^2 + y^2 - 1=0$ and $f_2=x^2 + y^2 - 4=0$ centered at the origin. To compute the chambers of $\mathcal{U}  =   \{ u \in \mathbb{R}^2  \mid   f_1(u) \cdot f_2(u)  \not=  0 \}$ we can use the following code:    
 
 ```julia
+julia> using Chambers
 julia> @var x y;
 julia> f_1 = x^2 + y^2 - 1;
 julia> f_2 = x^2 + y^2 - 4;
@@ -44,6 +45,17 @@ ChambersResult with 3 chambers:
 
 The output shows that $\mathcal U$ has three chambers. The first chamber has sign pattern $++$. This means that, on this chamber, both $f_1$ and $f_2$ are positive. On the second chamber, both $f_1$ and $f_2$ are negative, so it is the contractible chamber in the middle. The software correctly reports that this chamber has Euler characteristic 1. The other two chambers each have one hole and thus have Euler characteristic 0. 
 
+## Example: 3 random polynomials in 4 variables
+
+We can set up a random example as follows.
+```julia
+julia> using Chambers
+julia> @var v[1:3];
+julia> f = [rand_poly(Float64, v, d) for d in [2, 3, 3]];
+julia> C = chambers(f)
+```
+
+Here, `f` consists of 3 random polynomials in `v`. The degrees of these polynomials are `[2, 3, 3]`. The coefficients are chosen from a Gaussian distribution.
 
 ## Documentation: Output
 
