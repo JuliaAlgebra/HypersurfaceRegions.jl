@@ -41,41 +41,41 @@ function Chamber(
 end
 
 """
-    sign(R::Chamber)
+    sign(C::Chamber)
 
 Returns the sign vector.
 """
-Base.sign(R::Chamber) = R.sign
+Base.sign(C::Chamber) = C.sign
 
 """
-    χ(R::Chamber)
+    χ(C::Chamber)
 
 Returns the Euler characteristic.
 """
-χ(R::Chamber) = R.χ
+χ(C::Chamber) = C.χ
 
 """
-    μ(R::Chamber)
+    μ(C::Chamber)
 
 Returns the index vector.
 """
-μ(R::Chamber) = R.μ
+μ(C::Chamber) = C.μ
 
 """
-    critical_points(R::Chamber)
+    critical_points(C::Chamber)
 
-Returns the critical points in `R`.
+Returns the critical points in `C`.
 """
-critical_points(R::Chamber) = R.critical_points
+critical_points(C::Chamber) = C.critical_points
 
 """
-    is_bounded(R::Chamber)
+    is_bounded(C::Chamber)
 
-Returns a boolean that is `true`, if `R` is bounded. If that information was not computed, it simply returns `nothing`.
+Returns a boolean that is `true`, if `C` is bounded. If that information was not computed, it simply returns `nothing`.
 """
-is_bounded(R::Chamber) = R.is_bounded
+is_bounded(C::Chamber) = C.is_bounded
 
-g(R::Chamber) = R.g
+g(C::Chamber) = C.g
 
 
 """
@@ -93,126 +93,126 @@ struct ChambersResult
 end
 
 """
-    chambers(R::ChambersResult)
+    chambers(C::ChambersResult)
 
-Returns the vector of chambers in `R`.
+Returns the vector of chambers in `C`.
 """
-function chambers(R::ChambersResult)
-    out = map(R.chamber_list) do Rᵢ
-        Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, R.g, Rᵢ.is_bounded)
+function chambers(C::ChambersResult)
+    out = map(C.chamber_list) do Rᵢ
+        Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, C.g, Rᵢ.is_bounded)
     end
     return out
 end
 
 """
-    projective_chambers(R::ChambersResult)
+    projective_chambers(C::ChambersResult)
 
-Returns a vector of vectors. The entries of the vectors correspond to those chambers in `R`, which are fused in projective space.
+Returns a vector of vectors. The entries of the vectors correspond to those chambers in `C`, which are fused in projective space.
 
 The following code will return a vector of vectors of type `Chamber`:
 ```julia
 using Chambers
 @var x y
 f = [x^2 + y^2 - 1; x^2 + y^2 - 4];
-R = chambers(f)
-p = projective_chambers(R)
-map(pᵢ -> chambers(R)[pᵢ], p)
+C = chambers(f)
+p = projective_chambers(C)
+map(pᵢ -> chambers(C)[pᵢ], p)
 ```
 """
-projective_chambers(R::ChambersResult) = R.projective_chambers
+projective_chambers(C::ChambersResult) = C.projective_chambers
 
 
 """
-    nchambers(R::ChambersResult)
+    nchambers(C::ChambersResult)
 
-Returns the number of chambers in `R`.
+Returns the number of chambers in F.
 """
-nchambers(R::ChambersResult) = R.nchambers
-
-"""
-    nbounded(R::ChambersResult)
-
-Returns the number of bounded chambers in `R`.
-"""
-nbounded(R::ChambersResult) = count(is_bounded, chambers(R))
+nchambers(C::ChambersResult) = C.nchambers
 
 """
-    nunbounded(R::ChambersResult)
+    nbounded(C::ChambersResult)
 
-Returns the number of unbounded chambers in `R`.
+Returns the number of bounded chambers in `C`.
 """
-nunbounded(R::ChambersResult) = count(r -> !is_bounded(r), chambers(R))
-
-"""
-    bounded(R::ChambersResult)
-
-Returns the bounded chambers in `R`.
-"""
-bounded(R::ChambersResult) = filter(is_bounded, chambers(R))
+nbounded(C::ChambersResult) = count(is_bounded, chambers(C))
 
 """
-    unbounded(R::ChambersResult)
+    nunbounded(C::ChambersResult)
 
-Returns the unbounded chambers in `R`.
+Returns the number of unbounded chambers in `C`.
 """
-unbounded(R::ChambersResult) = filter(r -> !is_bounded(r), chambers(R))
-
-"""
-    euler_characteristics(R::ChambersResult)
-
-Returns the Euler characteristics of the chambers in `R`.
-"""
-euler_characteristics(R::ChambersResult) = map(r -> χ(r), chambers(R))
-χ(R::ChambersResult) = euler_characteristics(R)
+nunbounded(C::ChambersResult) = count(r -> !is_bounded(r), chambers(C))
 
 """
-    euler_characteristics(R::ChambersResult)
+    bounded(C::ChambersResult)
 
-Returns the index vectors of the chambers in `R`.
+Returns the bounded chambers in `C`.
 """
-index_vectors(R::ChambersResult) = map(r -> μ(r), chambers(R))
-μ(R::ChambersResult) = index_vectors(R)
-
-"""
-    ncritical_complex(R::ChambersResult)
-
-Returns the number of complex critical points of the Morse function in `R`.
-"""
-ncritical_complex(R::ChambersResult) = R.ncritical_complex
+bounded(C::ChambersResult) = filter(is_bounded, chambers(C))
 
 """
-    ncritical_real(R::ChambersResult)
+    unbounded(C::ChambersResult)
 
-Returns the number of real critical points of the Morse function in `R`.
+Returns the unbounded chambers in `C`.
 """
-ncritical_real(R::ChambersResult) = R.ncritical_real
+unbounded(C::ChambersResult) = filter(r -> !is_bounded(r), chambers(C))
 
 """
-    g(R::ChambersResult)
+    euler_characteristics(C::ChambersResult)
 
-Returns the Morse function in `R`.
+Returns the Euler characteristics of the chambers in `C`.
 """
-g(R::ChambersResult) = R.g
+euler_characteristics(C::ChambersResult) = map(r -> χ(r), chambers(C))
+χ(C::ChambersResult) = euler_characteristics(C)
+
+"""
+    euler_characteristics(C::ChambersResult)
+
+Returns the index vectors of the chambers in `C`.
+"""
+index_vectors(C::ChambersResult) = map(r -> μ(r), chambers(C))
+μ(C::ChambersResult) = index_vectors(C)
+
+"""
+    ncritical_complex(C::ChambersResult)
+
+Returns the number of complex critical points of the Morse function in `C`.
+"""
+ncritical_complex(C::ChambersResult) = C.ncritical_complex
+
+"""
+    ncritical_real(C::ChambersResult)
+
+Returns the number of real critical points of the Morse function in `C`.
+"""
+ncritical_real(C::ChambersResult) = C.ncritical_real
+
+"""
+    g(C::ChambersResult)
+
+Returns the Morse function in `C`.
+"""
+g(C::ChambersResult) = C.g
 
 
 ###############
 ### Show ###
 ###############
-Base.show(R::ChambersResult; crop = true) = Base.show(stdout, R, crop = crop)
-function Base.show(io::IO, R::ChambersResult; crop = true)
+Base.show(C::ChambersResult; crop = true) = Base.show(stdout, R, crop = crop)
+function Base.show(io::IO, C::ChambersResult; crop = true)
 
-    header = "ChambersResult with $(R.nchambers) chambers:"
+    header = "ChambersResult with $(C.nchambers) chambers:"
     println(io, header)
     println(io, "="^(length(header)))
 
-    println(io, "$(R.ncritical_complex) complex critical points")
-    println(io, "$(R.ncritical_real) real critical points")
+    println(io, "$(C.ncritical_complex) complex critical points")
+    println(io, "$(C.ncritical_real) real critical points")
 
-    all_chambers = R.chamber_list
+    all_chambers = C.chamber_list
     sign_list = [chamber.sign for chamber in all_chambers]
     unique_signs = unique(sign_list)
 
-    k = length(unique_signs) + nchambers(R)
+    k = length(unique_signs) + nchambers(C)
     table = Matrix{String}(undef, k, 2)
 
     which_sign = [findall(sign -> sign == s, sign_list) for s in unique_signs]
@@ -267,16 +267,16 @@ function Base.show(io::IO, R::ChambersResult; crop = true)
     )
 end
 
-function Base.show(io::IO, R::Chamber)
-    sign = R.sign
+function Base.show(io::IO, C::Chamber)
+    sign = C.sign
     sign_string = join([v == 1 ? "+" : v == -1 ? "-" : string(v) for v in sign], " ")
 
     header = "Chamber with sign pattern ($sign_string) :"
     println(io, header)
 
-    b = R.is_bounded
-    χ = R.χ
-    μ = R.μ
+    b = C.is_bounded
+    χ = C.χ
+    μ = C.μ
 
     if isnothing(b)
         println(io, " χ = $χ, μ = $μ")
