@@ -45,7 +45,7 @@ ChambersResult with 3 chambers:
 
 The output shows that $\mathcal U$ has three chambers. The first chamber has sign pattern $++$. This means that, on this chamber, both $f_1$ and $f_2$ are positive. On the second chamber, both $f_1$ and $f_2$ are negative, so it is the contractible chamber in the middle. The software correctly reports that this chamber has Euler characteristic 1. The other two chambers each have one hole and thus have Euler characteristic 0. 
 
-## Example: 3 random polynomials in 4 variables
+## Example: 3 random polynomials
 
 We can set up a random example as follows.
 ```julia
