@@ -17,7 +17,7 @@ function membership(R::ChambersResult, p::T; kwargs...) where {T<:AbstractArray}
     k = length(f_list)
 
     logg = sum(s[i] * log(f_list[i]^2) for i = 1:k)
-    HC.differentiate(logg, variables(f))
+    ∇ = HC.differentiate(logg, variables(f))
     ∇logg = fixed(System(∇, variables = variables(f)))
 
     membership(R, p, ∇logg; kwargs...)
