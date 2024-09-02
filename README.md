@@ -1,4 +1,5 @@
 
+[![][docs-stable-img]][docs-stable-url]
 
 # Chambers
 
@@ -53,3 +54,6 @@ ChambersResult with 3 chambers:
 ```
 
 The output shows that $\mathcal U$ has three chambers. The first chamber has sign pattern $++$. This means that, on this chamber, both $f_1$ and $f_2$ are positive. On the second chamber, both $f_1$ and $f_2$ are negative, so it is the contractible chamber in the middle. The software correctly reports that this chamber has Euler characteristic 1. The other two chambers each have one hole and thus have Euler characteristic 0. 
+
+[docs-stable-img]: https://img.shields.io/badge/docs-online-blue.svg
+[docs-stable-url]: https://juliaalgebra.github.io/Chambers.jl/
