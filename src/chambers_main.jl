@@ -52,7 +52,7 @@ end
 function point_unbounded(f::Expression, a::Array{T}) where {T<:Real}
     new_a = vcat(1, a)
     @unique_var t
-    f_t = subs(f, variables(f) => t * new_a)
+    f_t = subs(f, HC.variables(f) => t * new_a)
     S = HC.solve([f_t], t; show_progress = false)
     R = real_solutions(S)
 
@@ -217,10 +217,12 @@ function _chambers(
     for critical_point in critical_points_infty
 
         unbounded_point = point_unbounded(prod_f, critical_point)
-        chamber_1_index = _membership(affine_output, unbounded_point, ∇logg)
+        C1 = _membership(affine_output, unbounded_point, ∇logg)
+        chamber_1_index = number(C1)
 
         if !isnothing(chamber_1_index)
-            chamber_2_index = _membership(affine_output, -unbounded_point, ∇logg)
+            C2 = _membership(affine_output, -unbounded_point, ∇logg)
+            chamber_2_index = number(C2)
 
             if !isnothing(chamber_2_index)
                 LG.add_edge!(graph, chamber_1_index, chamber_2_index)
@@ -241,13 +243,16 @@ function _chambers(
     unique!(unbounded)
 
     R_new = Vector{Chamber}()
+    j = 1
     for i in bounded
         Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, true))
+        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, true, j))
+        j += 1
     end
     for i in unbounded
         Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, false))
+        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, false, j))
+        j += 1
     end
 
     if projective_fusion

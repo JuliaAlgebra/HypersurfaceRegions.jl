@@ -60,7 +60,7 @@ function _affine_chambers(
         Random.seed!(seed)
     end
 
-    variable_list = variables(f)
+    variable_list = HC.variables(f)
     f_denom = generate_random_degree_2(variable_list)
     f_list = [f.expressions; f_denom]
     k = length(f_list)
@@ -129,6 +129,7 @@ function _affine_chambers(
 
     # structure output
     chambers = Vector{Chamber}()
+    j = 1
     for (sign, par_list) in pairs(sign_partition)
         for par in par_list
             sub_index_list = @view index_list[par]
@@ -141,7 +142,9 @@ function _affine_chambers(
                     euler_char += 1
                 end
             end
-            R = Chamber(sign, euler_char, μ, real_sols[par], nothing, nothing)
+            R = Chamber(sign, euler_char, μ, real_sols[par], nothing, nothing, j)
+            j += 1
+
             push!(chambers, R)
         end
     end

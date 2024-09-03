@@ -16,7 +16,9 @@ export ChambersResult,
     ncritical_complex,
     ncritical_real,
     projective_chambers,
-    sign
+    sign,
+    number,
+    variables
 
 """
     Chamber
@@ -30,14 +32,7 @@ struct Chamber
     critical_points::Union{Vector{Float64},Vector{Vector{Float64}}}
     g::Union{Nothing,Tuple{System,Expression,Vector{Int}}}
     is_bounded::Union{Nothing,Bool}
-end
-function Chamber(
-    sign::Vector{Int},
-    χ::Int,
-    μ::Vector{Int},
-    critical_points::Vector{Vector{Float64}},
-)
-    Chamber(sign, χ, μ, critical_points, nothing, nothing)
+    chamber_number::Int
 end
 
 """
@@ -71,11 +66,19 @@ critical_points(C::Chamber) = C.critical_points
 """
     is_bounded(C::Chamber)
 
-Returns a boolean that is `true`, if `C` is bounded. If that information was not computed, it simply returns `nothing`.
+Returns a boolean that is `true`, if `C` is (weakly) bounded. If that information was not computed, it simply returns `nothing`.
 """
 is_bounded(C::Chamber) = C.is_bounded
 
+"""
+    number(C::Chamber)
+
+Each `Chamber` in a `ChambersResult` is assigned a number. 
+"""
+number(C::Chamber) = C.chamber_number
+
 g(C::Chamber) = C.g
+
 
 
 """
@@ -98,8 +101,8 @@ end
 Returns the vector of chambers in `C`.
 """
 function chambers(C::ChambersResult)
-    out = map(C.chamber_list) do Rᵢ
-        Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, C.g, Rᵢ.is_bounded)
+    out = map(C.chamber_list) do Cᵢ
+        Chamber(Cᵢ.sign, Cᵢ.χ, Cᵢ.μ, Cᵢ.critical_points, C.g, Cᵢ.is_bounded, Cᵢ.chamber_number)
     end
     return out
 end
@@ -194,6 +197,16 @@ Returns the Morse function in `C`.
 """
 g(C::ChambersResult) = C.g
 
+
+"""
+    variables(C::ChambersResult)
+
+Returns the order of variables.
+"""
+function variables(C::ChambersResult)
+    f, _, _ = g(C)
+    HC.HC.variables(f)
+end
 
 ###############
 ### Show ###

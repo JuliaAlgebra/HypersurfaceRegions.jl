@@ -17,8 +17,8 @@ function membership(R::ChambersResult, p::T; kwargs...) where {T<:AbstractArray}
     k = length(f_list)
 
     logg = sum(s[i] * log(f_list[i]^2) for i = 1:k)
-    ∇ = HC.differentiate(logg, variables(f))
-    ∇logg = fixed(System(∇, variables = variables(f)))
+    ∇ = HC.differentiate(logg, HC.variables(f))
+    ∇logg = fixed(System(∇, variables = HC.variables(f)))
 
     membership(R, p, ∇logg; kwargs...)
 end
@@ -29,15 +29,10 @@ function membership(
     ∇logg::AS;
     kwargs...,
 ) where {AS<:AbstractSystem}
-    chambers_list = R.chamber_list
+  
+    C = _membership(R, p, ∇logg; kwargs...)
 
-    i = _membership(R, p, ∇logg; kwargs...)
-
-    if isnothing(i)
-        return i
-    else
-        return chambers_list[i]
-    end
+    return C
 end
 
 function _membership(
@@ -68,9 +63,9 @@ function _membership(
     end
 
     end_critical_point = critical_points[critical_point_index]
-    for (i, critial_point_list) in enumerate(critical_points_lists)
-        if end_critical_point in critial_point_list
-            return i
+    for chamber in chambers_list
+        if end_critical_point in chamber.critical_points
+            return chamber
         end
     end
 end
