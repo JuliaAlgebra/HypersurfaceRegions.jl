@@ -218,13 +218,15 @@ function _chambers(
 
         unbounded_point = point_unbounded(prod_f, critical_point)
         C1 = _membership(affine_output, unbounded_point, ∇logg)
-        chamber_1_index = number(C1)
+        
+        if !isnothing(C1)
+            chamber_1_index = number(C1)
 
-        if !isnothing(chamber_1_index)
             C2 = _membership(affine_output, -unbounded_point, ∇logg)
-            chamber_2_index = number(C2)
+            
+            if !isnothing(C2)
+                chamber_2_index = number(C2)
 
-            if !isnothing(chamber_2_index)
                 LG.add_edge!(graph, chamber_1_index, chamber_2_index)
                 append!(unbounded, chamber_1_index)
                 append!(unbounded, chamber_2_index)
