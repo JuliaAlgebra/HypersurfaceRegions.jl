@@ -110,7 +110,7 @@ end
 """
     projective_chambers(C::ChambersResult)
 
-Returns a vector of vectors. The entries of the vectors correspond to those chambers in `C`, which are fused in projective space.
+Returns a vector of vectors. The entries of the vectors are those chambers in `C`, which are fused in projective space.
 
 The following code will return a vector of vectors of type `Chamber`:
 ```julia
@@ -119,11 +119,17 @@ using Chambers
 f = [x^2 + y^2 - 1; x^2 + y^2 - 4];
 C = chambers(f)
 p = projective_chambers(C)
-map(pᵢ -> chambers(C)[pᵢ], p)
 ```
 """
-projective_chambers(C::ChambersResult) = C.projective_chambers
+function projective_chambers(C::ChambersResult) 
+    c = chambers(C)
+    p = C.projective_chambers
+    P = map(p) do pᵢ
+        filter(ci -> in(number(ci), pᵢ), c)
+    end
 
+    P
+end
 
 """
     nchambers(C::ChambersResult)
