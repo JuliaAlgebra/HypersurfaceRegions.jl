@@ -55,7 +55,13 @@ julia> f = [rand_poly(Float64, v, d) for d in [2, 3, 3]];
 julia> C = chambers(f)
 ```
 
-Here, `f` consists of 3 random polynomials in `v`. The degrees of these polynomials are `[2, 3, 3]`. The coefficients are chosen from a Gaussian distribution.
+Here, `f` consists of 3 random polynomials in `v`. The degrees of these polynomials are `[2, 3, 3]`. The coefficients are chosen from a Gaussian distribution. 
+
+At a certain number of rows, the output of `C` in terminal is cropped. To avoid this, we can use the following command.
+```julia
+julia> show(C; crop = false)
+```
+
 
 ## Documentation: Output
 
@@ -81,6 +87,7 @@ Functions to call on [Chamber](@ref).
 μ
 critical_points
 is_bounded
+number
 ```
 
 Functions to call on [ChambersResult](@ref).
@@ -95,4 +102,5 @@ index_vectors
 ncritical_complex
 ncritical_real
 g
+variables
 ```
