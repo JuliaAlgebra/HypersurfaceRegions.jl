@@ -45,21 +45,48 @@ ChambersResult with 3 chambers:
 
 The output shows that $\mathcal U$ has three chambers. The first chamber has sign pattern $++$. This means that, on this chamber, both $f_1$ and $f_2$ are positive. On the second chamber, both $f_1$ and $f_2$ are negative, so it is the contractible chamber in the middle. The software correctly reports that this chamber has Euler characteristic 1. The other two chambers each have one hole and thus have Euler characteristic 0. 
 
+Let us visualize the three chambers. We use the [Plots.jl](https://docs.juliaplots.org/) package. For this, we define a function that spits out a color corresponding to a region given a point. It uses the [membership](@ref) function. 
+
+```julia
+function chamber_col(x, y)
+    Ci = membership(C, [x; y]; warning = false)
+    if !isnothing(Ci)
+        return number(Ci)
+    else
+        return nothing
+    end
+end 
+
+u = -4:0.05:4; v = -3:0.05:3;
+X = repeat(reshape(u, 1, :), length(v), 1);
+Y = repeat(v, 1, length(u));
+Z = map(chamber_col, X, Y);
+
+using Plots
+contour(u, v, Z, fill = true, alpha = 0.25, 
+                                    legend = false, 
+                                    aspect_ratio = :equal)
+```
+
+This produces the following picture:
+
+![circles](circles.png)
+
 ## Example: 3 random polynomials
 
 We can set up a random example as follows.
 ```julia
-julia> using Chambers
-julia> @var v[1:3];
-julia> f = [rand_poly(Float64, v, d) for d in [2, 3, 3]];
-julia> C = chambers(f)
+using Chambers
+@var v[1:3];
+f = [rand_poly(Float64, v, d) for d in [2, 3, 3]];
+C = chambers(f)
 ```
 
 Here, `f` consists of 3 random polynomials in `v`. The degrees of these polynomials are `[2, 3, 3]`. The coefficients are chosen from a Gaussian distribution. 
 
 At a certain number of rows, the output of `C` in terminal is cropped. To avoid this, we can use the following command.
 ```julia
-julia> show(C; crop = false)
+show(C; crop = false)
 ```
 
 
