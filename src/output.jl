@@ -141,7 +141,7 @@ nchambers(C::ChambersResult) = C.nchambers
 """
     nbounded(C::ChambersResult)
 
-Returns the number of bounded chambers in `C`.
+Returns the number of (weakly) bounded chambers in `C`.
 """
 nbounded(C::ChambersResult) = count(is_bounded, chambers(C))
 
@@ -155,7 +155,7 @@ nunbounded(C::ChambersResult) = count(r -> !is_bounded(r), chambers(C))
 """
     bounded(C::ChambersResult)
 
-Returns the bounded chambers in `C`.
+Returns the (weakly) bounded chambers in `C`.
 """
 bounded(C::ChambersResult) = filter(is_bounded, chambers(C))
 
