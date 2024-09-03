@@ -254,17 +254,7 @@ function _chambers(
 
     if projective_fusion
 
-        partition = LG.connected_components(graph)
-        projective_chambers = []
-        for par in partition
-            if in(par[1], unbounded)
-                push!(projective_chambers, par)
-            end
-        end
-
-        for b in bounded
-            push!(projective_chambers, [b])
-        end
+        projective_chambers = LG.connected_components(graph)
     else
         projective_chambers = nothing
     end
