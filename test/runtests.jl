@@ -42,6 +42,19 @@ using Test
     @test Base.sign(R1) == [1; -1]
 end
 
+@testset "a circle and a line" begin
+    @var x y
+    R = chambers([x^2 + y^2 - 1; x])
+    p = projective_chambers(R)
+
+    @test length(p) == 3
+
+    D = filter(pi -> length(pi) == 2, p)
+    @test !isempty(D)
+    @test !isempty(D[1])
+    @test all(Ci -> !is_bounded(Ci), D[1])
+end
+
 @testset "a circle and a hyperbola" begin
     @var x y
     f_1 = y^2 + x^2 - 1
