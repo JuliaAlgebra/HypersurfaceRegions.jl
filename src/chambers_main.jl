@@ -243,16 +243,13 @@ function _chambers(
     unique!(unbounded)
 
     R_new = Vector{Chamber}()
-    j = 1
     for i in bounded
         Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, true, j))
-        j += 1
+        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, true, Rᵢ.chamber_number))
     end
     for i in unbounded
         Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, false, j))
-        j += 1
+        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, false, Rᵢ.chamber_number))
     end
 
     if projective_fusion
