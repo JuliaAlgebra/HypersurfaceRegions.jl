@@ -182,8 +182,6 @@ function compute_critical_points(
         target_parameters = [target_parameters]
     end
 
-    @show target_parameters
-
     f_denom = generate_random_degree_2(variable_list)
     f_list = [f.expressions; f_denom]
     k = length(f_list)
