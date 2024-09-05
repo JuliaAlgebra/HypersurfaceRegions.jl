@@ -64,26 +64,9 @@ function _affine_chambers(
     f_denom = generate_random_degree_2(variable_list)
     f_list = [f.expressions; f_denom]
     k = length(f_list)
+    s = set_up_s(s, f)
 
-
-    # define parameter if not provided
-    if isnothing(s)
-        u_last = ceil(sum(degrees(f)) / 2) + 1
-        s = [ones(Float64, k - 1); -u_last]
-        # check if the input parameter is correct
-    else
-        if length(s) != k
-            error(
-                "The length of the provided list of polynomials does not match the number of parameters.",
-            )
-        elseif any(s[1:(k-1)] .≤ 0) || s[k] ≥ 0
-            error("Not all parameters have the correct sign.")
-        elseif sum(degrees(f) .* s[1:(k-1)]) + 2 * s[k] > 0
-            error(
-                "The parameters `s` don't satisfy `-2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)``.",
-            )
-        end
-    end
+    
 
     # solve critical points 
     m_1 = compute_critical_points(
@@ -169,6 +152,15 @@ function count_appearance(lst, n)
     end
     return counts
 end
+
+
+
+"""
+    compute_critical_points
+
+Computes the critical points of the rational function using `HomotopyContinuation.jl`.
+
+"""
 
 
 
@@ -282,6 +274,29 @@ function compute_critical_points(
 
     finish_monodromy!(progress)
     return m_1
+end
+
+function set_up_s(s, f)
+    # define parameter if not provided
+    if isnothing(s)
+        u_last = ceil(sum(degrees(f)) / 2) + 1
+        s = [ones(Float64, length(f)); -u_last]
+        # check if the input parameter is correct
+    else
+        if length(s) != k
+            error(
+                "The length of the provided list of polynomials does not match the number of parameters.",
+            )
+        elseif any(s[1:(k-1)] .≤ 0) || s[k] ≥ 0
+            error("Not all parameters have the correct sign.")
+        elseif sum(degrees(f) .* s[1:(k-1)]) + 2 * s[k] > 0
+            error(
+                "The parameters `s` don't satisfy `-2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)``.",
+            )
+        end
+    end
+
+    s
 end
 
 function compute_parameter(J, variable_list, x0)
