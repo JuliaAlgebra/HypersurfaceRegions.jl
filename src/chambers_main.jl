@@ -49,6 +49,36 @@ function get_f_infty(
 end
 
 
+function get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
+    #
+    if all(HC.degree.(poly_list_infty) .== 0)
+        critical_points_infty = Vector{Vector{ComplexF64}}()
+    else
+        infty_output = _affine_chambers(
+            System(poly_list_infty, variables = variable_list[2:end]),
+            progress;
+            s = s,
+            epsilon = epsilon,
+            reltol = reltol,
+            abstol = abstol,
+            monodromy_options = monodromy_options,
+            start_pair_using_newton = start_pair_using_newton,
+            seed = seed,
+        )
+
+        if isnothing(infty_output)
+            critical_points_infty = Vector{Vector{ComplexF64}}()
+        end
+
+        critical_points_infty = map(infty_output.chamber_list) do chamber
+            chamber.critical_points[1]
+        end
+
+    end
+    critical_points_infty
+
+end
+
 
 # input a point a at infinity (P^n-R^n)
 # output a point in the affine linear space in some unbounded chamber of R^n-V(f)
@@ -125,6 +155,7 @@ end
 function _chambers(
     f::System,
     progress::Union{Nothing,ChambersProgress};
+    δ::Float64 = 1e-8,
     projective_fusion::Bool = true,
     s::Union{Nothing,Vector{T}} = nothing,
     epsilon::Float64 = 1e-6,
@@ -136,7 +167,7 @@ function _chambers(
     kwargs...,
 ) where {T<:Real}
 
-
+    ####
     # Stage 1: computing affine chambers
     set_stage!(progress, 1)
     #
@@ -157,7 +188,8 @@ function _chambers(
         return nothing
     end
 
-    # Stage 2: computing projective chambers
+    ####
+    # Stage 2: compute critical points at infinity
     set_stage!(progress, 2)
     #
 
@@ -170,32 +202,17 @@ function _chambers(
 
 
     poly_list_infty = map(fi -> subs(fi, x0 => 0.0), f0)
+    critical_points_infty = get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
 
-    if all(HC.degree.(poly_list_infty) .== 0)
-        critical_points_infty = Vector{Vector{ComplexF64}}()
-    else
-        infty_output = _affine_chambers(
-            System(poly_list_infty, variables = variable_list[2:end]),
-            progress;
-            s = s,
-            epsilon = epsilon,
-            reltol = reltol,
-            abstol = abstol,
-            monodromy_options = monodromy_options,
-            start_pair_using_newton = start_pair_using_newton,
-            seed = seed,
-        )
+    poly_list_infty_1 = map(fi -> subs(fi, x0 => δ), f0)
+    critical_points_infty_1 = get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
 
-        if isnothing(infty_output)
-            critical_points_infty = Vector{Vector{ComplexF64}}()
-        end
+    poly_list_infty_2 = map(fi -> subs(fi, x0 => -δ), f0)
+    critical_points_infty_2 = get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
 
-        critical_points_infty = map(infty_output.chamber_list) do chamber
-            chamber.critical_points[1]
-        end
+    @show critical_points_infty_1, critical_points_infty_2
 
-    end
-
+    ####
     # Stage 3: connecting critical points at infinity to affine chambers
     set_ncritical_points!(progress, 0)
     set_stage!(progress, 3)
@@ -217,12 +234,16 @@ function _chambers(
     ∇ = HC.differentiate(logg, variable_list)
     ∇logg = fixed(System(∇, variables = variable_list))
 
-    set_ncritical_points!(progress, length(critical_points_infty))
+
+    set_ncritical_points!(progress, length(critical_points_infty) + length(critical_points_infty_1) + length(critical_points_infty_2))
     j = 0
 
     unbounded = Vector{Int}()
+    undecided = Vector{Int}()
+    bounded = Vector{Int}()
+    
+    # critical points at infinity
     for critical_point in critical_points_infty
-
         unbounded_point = point_unbounded(prod_f, critical_point)
         C1 = _membership(affine_output, unbounded_point, ∇logg)
         
@@ -244,24 +265,50 @@ function _chambers(
 
         j += 1
         set_ncritical_points_classified!(progress, j)
-
-        #@warn "Some critical points could not be associated to one chamber."
     end
 
-    bounded = setdiff(1:N, unbounded)
+    # critical points at the strip around infinity
+    for critical_point in vcat(critical_points_infty_1, critical_points_infty_2)
+        C = _membership(affine_output, [1; critical_point] ./ δ, ∇logg)
+
+        if !isnothing(C) 
+            append!(undecided, number(C))
+        end
+
+        j += 1
+        set_ncritical_points_classified!(progress, j)
+    end
+
+    still_to_decide = setdiff(1:N, vcat(unbounded, undecided))
+    for i in still_to_decide
+        C = R[i]
+        c = critical_points(C) |> first
+        invc = inv(c[1])
+        if invc > δ || invc < -δ
+            append!(bounded, number(C))
+        else
+            append!(undecided, number(C))
+        end
+    end
 
     unique!(bounded)
     unique!(unbounded)
+    unique!(undecided)
 
     R_new = Vector{Chamber}()
-    for i in bounded
-        Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, true, Rᵢ.chamber_number))
-    end
     for i in unbounded
         Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, false, Rᵢ.chamber_number))
+        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 0, Rᵢ.chamber_number))
     end
+    for i in bounded
+        Rᵢ = R[i]
+        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 1, Rᵢ.chamber_number))
+    end
+    for i in undecided
+        Rᵢ = R[i]
+        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 2, Rᵢ.chamber_number))
+    end
+
 
     if projective_fusion
         projective_chambers = LG.connected_components(graph)

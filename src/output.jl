@@ -68,7 +68,7 @@ critical_points(C::Chamber) = C.critical_points
 
 Returns a boolean that is `true`, if `C` is undecided. 
 """
-is_bounded(C::Chamber) = C.is_bounded == 0
+is_unbounded(C::Chamber) = C.is_bounded == 0
 
 """
     is_bounded(C::Chamber)
@@ -82,7 +82,7 @@ is_bounded(C::Chamber) = C.is_bounded == 1
 
 Returns a boolean that is `true`, if the algorithm could not decided whether `C` is bounded or not.
 """
-is_bounded(C::Chamber) = C.is_bounded == 2
+is_undecided(C::Chamber) = C.is_bounded == 2
 
 """
     number(C::Chamber)
@@ -170,7 +170,7 @@ nunbounded(C::ChambersResult) = count(is_unbounded, chambers(C))
 
 Returns the number of chambers in `C`, where bounded or unbounded could not be decided.
 """
-nunbounded(C::ChambersResult) = count(is_undecided, chambers(C))
+nundecided(C::ChambersResult) = count(is_undecided, chambers(C))
 
 """
     bounded(C::ChambersResult)
@@ -191,7 +191,7 @@ unbounded(C::ChambersResult) = filter(is_unbounded, chambers(C))
 
 Returns the number of chambers in `C`, where bounded or unbounded could not be decided.
 """
-nunbounded(C::ChambersResult) = filter(is_undecided, chambers(C))
+undecided(C::ChambersResult) = filter(is_undecided, chambers(C))
 
 """
     euler_characteristics(C::ChambersResult)
@@ -331,12 +331,12 @@ function Base.show(io::IO, C::Chamber)
     μ = C.μ
 
     if isnothing(b)
-        table[i, 2] = " χ = $χ, μ = $μ"
+        println(io, " χ = $χ, μ = $μ")
     elseif b == 0
-        table[i, 2] = "χ = $χ, μ = $μ, unbounded"
+       println(io, "χ = $χ, μ = $μ, unbounded")
     elseif b == 1
-        table[i, 2] = "χ = $χ, μ = $μ, bounded"
+        println(io, "χ = $χ, μ = $μ, bounded")
     elseif b == 2
-        table[i, 2] = "χ = $χ, μ = $μ, undecided"
+        println(io, "χ = $χ, μ = $μ, undecided")
     end
 end
