@@ -171,7 +171,7 @@ end
 function _chambers(
     f::System,
     progress::Union{Nothing,ChambersProgress};
-    δ::Float64 = 1e-2,
+    δ::Float64 = 1e-5,
     projective_fusion::Bool = true,
     s::Union{Nothing,Vector{T}} = nothing,
     epsilon::Float64 = 1e-6,
@@ -217,16 +217,16 @@ function _chambers(
     variable_list = f.variables
     @unique_var x0
     f0 = map(fᵢ -> get_f_infty(fᵢ, variable_list, x0), poly_list)
+    F0 = System(f0, variables = variable_list[2:end], parameters = [x0])
 
-
-    poly_list_infty = map(fi -> subs(fi, x0 => 0.0), f0)
-    critical_points_infty = get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
-
-    poly_list_infty_1 = map(fi -> subs(fi, x0 => δ), f0)
-    critical_points_infty_1 = get_points_at_infinity(poly_list_infty_1, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
-
-    poly_list_infty_2 = map(fi -> subs(fi, x0 => -δ), f0)
-    critical_points_infty_2 = get_points_at_infinity(poly_list_infty_2, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
+    cpt, _ = compute_critical_points(F0, s, monodromy_options, progress, start_pair_using_newton; target_parameters = [[0.0], [δ], [-δ]], kwargs...)
+    
+    # critical points at infinity
+    critical_points_infty = real_solutions(first(cpt[1]))
+    # critical points at one side of the strip
+    critical_points_infty_1 = real_solutions(first(cpt[2]))
+    # critical points at the other side of the strip
+    critical_points_infty_2 = real_solutions(first(cpt[3]))
 
     ####
     # Stage 3: connecting critical points at infinity to affine chambers
