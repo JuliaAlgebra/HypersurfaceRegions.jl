@@ -59,31 +59,23 @@ function _affine_chambers(
     if !isnothing(seed)
         Random.seed!(seed)
     end
-
-    variable_list = HC.variables(f)
-    f_denom = generate_random_degree_2(variable_list)
-    f_list = [f.expressions; f_denom]
-    k = length(f_list)
-    s = set_up_s(s, f)
-
     
-
-    # solve critical points 
-    m_1 = compute_critical_points(
-        f_list,
-        variable_list,
-        s,
-        monodromy_options,
-        progress;
-        start_pair_using_newton = start_pair_using_newton,
-        kwargs...,
-    )
-
+    s = set_up_s(s,f)
+    m_1, f_denom = compute_critical_points(f,
+                        s,
+                        monodromy_options,
+                        progress;
+                        start_pair_using_newton = start_pair_using_newton,
+                        kwargs...)
     if isnothing(m_1)
         println("Couldn't solve the critical equations")
         return nothing
     end
     real_sols = real_solutions(m_1)
+
+    f_list = [f.expressions; f_denom]
+    variable_list = HC.variables(f)
+    k = length(f_list)
 
     logg = sum(s[i] * log(f_list[i]^2) for i = 1:k)
     ∇, Hlogg = gradient_hessian(logg, variable_list)
@@ -155,31 +147,28 @@ end
 
 
 
-"""
-    compute_critical_points
-
-Computes the critical points of the rational function using `HomotopyContinuation.jl`.
-
-"""
-
-
 
 
 """
     compute_critical_points
 
 Computes the critical points of the rational function using `HomotopyContinuation.jl`.
-
 """
 function compute_critical_points(
-    f_list::Vector{Expression},
-    variable_list::Vector{Variable},
+    f::System,
     s::Vector{T},
     monodromy_options::MonodromyOptions,
     progress::Union{Nothing,ChambersProgress};
     start_pair_using_newton::Bool = false,
     kwargs...,
 ) where {T<:Real}
+
+    variable_list = HC.variables(f)
+    f_denom = generate_random_degree_2(variable_list)
+    f_list = [f.expressions; f_denom]
+    k = length(f_list)
+
+    
 
     start_monodromy!(progress)
     show_progress = !isnothing(progress)
@@ -273,14 +262,16 @@ function compute_critical_points(
     )
 
     finish_monodromy!(progress)
-    return m_1
+    return m_1, f_denom
 end
 
 function set_up_s(s, f)
+    k = length(f) + 1
+    
     # define parameter if not provided
     if isnothing(s)
         u_last = ceil(sum(degrees(f)) / 2) + 1
-        s = [ones(Float64, length(f)); -u_last]
+        s = [ones(Float64, k - 1); -u_last]
         # check if the input parameter is correct
     else
         if length(s) != k

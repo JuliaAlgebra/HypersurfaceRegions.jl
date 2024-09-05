@@ -183,6 +183,8 @@ function _chambers(
     kwargs...,
 ) where {T<:Real}
 
+    s = set_up_s(s, f)
+
     ####
     # Stage 1: computing affine chambers
     set_stage!(progress, 1)
@@ -226,7 +228,6 @@ function _chambers(
     poly_list_infty_2 = map(fi -> subs(fi, x0 => -δ), f0)
     critical_points_infty_2 = get_points_at_infinity(poly_list_infty_2, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
 
-    @show length(critical_points_infty_1), length(critical_points_infty_2)
     ####
     # Stage 3: connecting critical points at infinity to affine chambers
     set_ncritical_points!(progress, 0)
