@@ -13,27 +13,30 @@ end
 
 
 # input a polynomial f with variables x_1 ...x_n 
-# homogenize f using x_0 and then set x_0=0 x_1=1 to get an affine polynomial at infinity
+# homogenize f using x_0 and then set x_1=1 to get an affine polynomial at infinity
 function get_f_infty(
     f::Expression,
     var_list::Vector{Variable},
-    selected_variable::Variable = var_list[1],
+    x0::Variable,
+    selected_variable::Variable = var_list[1]
 )
     exponents, coeffs = exponents_coefficients(f, var_list)
     total_degf_each_term = sum(exponents, dims = 1)
     degf = maximum(total_degf_each_term)
+    
     poly = Expression(0)
     num_monomials = length(total_degf_each_term)
+
     for i = 1:num_monomials
-        if total_degf_each_term[i] == degf
-            exponent = exponents[:, i]
-            coeff = coeffs[i]
-            monomial = coeff
-            for j = 1:length(exponent)
-                monomial = monomial * var_list[j]^exponent[j]
-            end
-            poly += monomial
+        exponent = exponents[:, i]
+        coeff = coeffs[i]
+        monomial = coeff
+        for j = 1:length(exponent)
+            monomial = monomial * var_list[j]^exponent[j]
         end
+
+        k = degf - total_degf_each_term[i]
+        poly += monomial * x0^k
     end
 
     result = get_f_affine(poly, var_list, selected_variable)
@@ -162,7 +165,11 @@ function _chambers(
     poly_list_infty = []
     poly_list = f.expressions
     variable_list = f.variables
-    poly_list_infty = map(fᵢ -> get_f_infty(fᵢ, variable_list), poly_list)
+    @unique_var x0
+    f0 = map(fᵢ -> get_f_infty(fᵢ, variable_list, x0), poly_list)
+
+
+    poly_list_infty = map(fi -> subs(fi, x0 => 0.0), f0)
 
     if all(HC.degree.(poly_list_infty) .== 0)
         critical_points_infty = Vector{Vector{ComplexF64}}()
@@ -180,7 +187,7 @@ function _chambers(
         )
 
         if isnothing(infty_output)
-            return nothing
+            critical_points_infty = Vector{Vector{ComplexF64}}()
         end
 
         critical_points_infty = map(infty_output.chamber_list) do chamber
@@ -219,17 +226,19 @@ function _chambers(
         unbounded_point = point_unbounded(prod_f, critical_point)
         C1 = _membership(affine_output, unbounded_point, ∇logg)
         
-        if !isnothing(C1)
+        if !isnothing(C1) 
             chamber_1_index = number(C1)
+            append!(unbounded, chamber_1_index)
 
-            C2 = _membership(affine_output, -unbounded_point, ∇logg)
-            
-            if !isnothing(C2)
-                chamber_2_index = number(C2)
+            if projective_fusion
+                C2 = _membership(affine_output, -unbounded_point, ∇logg)
+                
+                if !isnothing(C2)
+                    chamber_2_index = number(C2)
 
-                LG.add_edge!(graph, chamber_1_index, chamber_2_index)
-                append!(unbounded, chamber_1_index)
-                append!(unbounded, chamber_2_index)
+                    LG.add_edge!(graph, chamber_1_index, chamber_2_index)
+                    append!(unbounded, chamber_2_index)
+                end
             end
         end
 
@@ -255,7 +264,6 @@ function _chambers(
     end
 
     if projective_fusion
-
         projective_chambers = LG.connected_components(graph)
     else
         projective_chambers = nothing

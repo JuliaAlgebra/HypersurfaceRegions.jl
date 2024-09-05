@@ -31,7 +31,7 @@ struct Chamber
     μ::Vector{Int}
     critical_points::Union{Vector{Float64},Vector{Vector{Float64}}}
     g::Union{Nothing,Tuple{System,Expression,Vector{Int}}}
-    is_bounded::Union{Nothing,Bool}
+    is_bounded::Union{Nothing,Int} # 0 = unbounded, 1 = bounded, 2 = undecided
     chamber_number::Int
 end
 
@@ -64,11 +64,25 @@ Returns the critical points in `C`.
 critical_points(C::Chamber) = C.critical_points
 
 """
+    is_unbounded(C::Chamber)
+
+Returns a boolean that is `true`, if `C` is undecided. 
+"""
+is_bounded(C::Chamber) = C.is_bounded == 0
+
+"""
     is_bounded(C::Chamber)
 
-Returns a boolean that is `true`, if `C` is (weakly) bounded. If that information was not computed, it simply returns `nothing`.
+Returns a boolean that is `true`, if `C` is bounded. 
 """
-is_bounded(C::Chamber) = C.is_bounded
+is_bounded(C::Chamber) = C.is_bounded == 1
+
+"""
+    is_undecided(C::Chamber)
+
+Returns a boolean that is `true`, if the algorithm could not decided whether `C` is bounded or not.
+"""
+is_bounded(C::Chamber) = C.is_bounded == 2
 
 """
     number(C::Chamber)
@@ -78,7 +92,6 @@ Each `Chamber` in a `ChambersResult` is assigned a number.
 number(C::Chamber) = C.chamber_number
 
 g(C::Chamber) = C.g
-
 
 
 """
@@ -150,7 +163,14 @@ nbounded(C::ChambersResult) = count(is_bounded, chambers(C))
 
 Returns the number of unbounded chambers in `C`.
 """
-nunbounded(C::ChambersResult) = count(r -> !is_bounded(r), chambers(C))
+nunbounded(C::ChambersResult) = count(is_unbounded, chambers(C))
+
+"""
+    nundecided(C::ChambersResult)
+
+Returns the number of chambers in `C`, where bounded or unbounded could not be decided.
+"""
+nunbounded(C::ChambersResult) = count(is_undecided, chambers(C))
 
 """
     bounded(C::ChambersResult)
@@ -164,7 +184,14 @@ bounded(C::ChambersResult) = filter(is_bounded, chambers(C))
 
 Returns the unbounded chambers in `C`.
 """
-unbounded(C::ChambersResult) = filter(r -> !is_bounded(r), chambers(C))
+unbounded(C::ChambersResult) = filter(is_unbounded, chambers(C))
+
+"""
+    undecided(C::ChambersResult)
+
+Returns the number of chambers in `C`, where bounded or unbounded could not be decided.
+"""
+nunbounded(C::ChambersResult) = filter(is_undecided, chambers(C))
 
 """
     euler_characteristics(C::ChambersResult)
@@ -251,10 +278,12 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
             table[i, 1] = ""
             if isnothing(b)
                 table[i, 2] = " χ = $χ, μ = $μ"
-            elseif b
-                table[i, 2] = "χ = $χ, μ = $μ, (weakly) bounded"
-            else
+            elseif b == 0
                 table[i, 2] = "χ = $χ, μ = $μ, unbounded"
+            elseif b == 1
+                table[i, 2] = "χ = $χ, μ = $μ, bounded"
+            elseif b == 2
+                table[i, 2] = "χ = $χ, μ = $μ, undecided"
             end
             i += 1
         end
@@ -273,6 +302,10 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
     h2 = Highlighter(
         f = (data, i, j) -> (last(data[i, j], 9) == "unbounded");
         crayon = crayon"blue",
+    )
+    h3 = Highlighter(
+        f = (data, i, j) -> (last(data[i, j], 9) == "undecided");
+        crayon = crayon"cyan",
     )
 
     pretty_table(
@@ -298,10 +331,12 @@ function Base.show(io::IO, C::Chamber)
     μ = C.μ
 
     if isnothing(b)
-        println(io, " χ = $χ, μ = $μ")
-    elseif b
-        println(io, "χ = $χ, μ = $μ, (weakly) bounded")
-    else
-        println(io, "χ = $χ, μ = $μ, unbounded")
+        table[i, 2] = " χ = $χ, μ = $μ"
+    elseif b == 0
+        table[i, 2] = "χ = $χ, μ = $μ, unbounded"
+    elseif b == 1
+        table[i, 2] = "χ = $χ, μ = $μ, bounded"
+    elseif b == 2
+        table[i, 2] = "χ = $χ, μ = $μ, undecided"
     end
 end
