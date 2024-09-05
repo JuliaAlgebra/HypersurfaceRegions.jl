@@ -171,7 +171,7 @@ end
 function _chambers(
     f::System,
     progress::Union{Nothing,ChambersProgress};
-    δ::Float64 = 0.1,
+    δ::Float64 = 1e-2,
     projective_fusion::Bool = true,
     s::Union{Nothing,Vector{T}} = nothing,
     epsilon::Float64 = 1e-6,
@@ -226,6 +226,7 @@ function _chambers(
     poly_list_infty_2 = map(fi -> subs(fi, x0 => -δ), f0)
     critical_points_infty_2 = get_points_at_infinity(poly_list_infty_2, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
 
+    @show length(critical_points_infty_1), length(critical_points_infty_2)
     ####
     # Stage 3: connecting critical points at infinity to affine chambers
     set_ncritical_points!(progress, 0)
