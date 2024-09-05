@@ -40,6 +40,14 @@ using Test
 
     R1 = membership(R, [3 / 2; 0])
     @test Base.sign(R1) == [1; -1]
+
+    # parameters 
+    @var p
+    f_1 = x^2 + y^2 - p
+    f_2 = x^2 + y^2 - 4
+    f = System([f_1; f_2], parameters = [p])
+    R = chambers(f, target_parameters = [0.0])
+    @test isa(R, ChambersResult)
 end
 
 @testset "a circle and a line" begin

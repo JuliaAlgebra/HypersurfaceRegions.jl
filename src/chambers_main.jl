@@ -107,9 +107,16 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
             t = 5.0 * (m + 1) # relative increase of m
         elseif δ > 0 
             t = 5.0 * (maximum(R) + 1) # relative increase of m
-        else δ < 0
+            if inv(t) < δ
+                t = maximum(R) + min(5.0, (inv(δ)-maximum(R))/2)
+            end
+        elseif δ < 0
             t = 5.0 * (minimum(R) - 1) # relative increase of m
+            if inv(t) > δ
+                t = minimum(R) - min(5.0, (minimum(R)-inv(δ))/2)
+            end
         end
+
     end
     return t * new_a
 end
@@ -169,20 +176,26 @@ end
 
 
 function _chambers(
-    f::System,
+    f0::System,
     progress::Union{Nothing,ChambersProgress};
-    δ::Float64 = 1e-5,
-    projective_fusion::Bool = true,
+    δ::Float64 = 1e-4,
+    target_parameters::Union{Nothing, Vector{T1}} = nothing,
     s::Union{Nothing,Vector{T}} = nothing,
     epsilon::Float64 = 1e-6,
     reltol::Float64 = 1e-6,
     abstol::Float64 = 1e-9,
     monodromy_options = HC.MonodromyOptions(max_loops_no_progress = 10),
     start_pair_using_newton::Bool = false,
+    projective_fusion::Bool = true,
     seed = nothing,
     kwargs...,
-) where {T<:Real}
+) where {T<:Real, T1<:Number}
 
+    if isnothing(f0)
+        f = f0
+    else
+        f = System(f0(HC.variables(f0), target_parameters), variables = HC.variables(f0))
+    end
     s = set_up_s(s, f)
 
     ####
@@ -194,6 +207,7 @@ function _chambers(
         f,
         progress;
         s = s,
+        target_parameters = nothing,
         epsilon = epsilon,
         reltol = reltol,
         abstol = abstol,

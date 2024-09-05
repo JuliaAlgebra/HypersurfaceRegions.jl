@@ -44,9 +44,10 @@ end
 
 
 function _affine_chambers(
-    f::System,
+    f0::System,
     progress::Union{Nothing,ChambersProgress};
     s::Union{Nothing,Vector{T}} = nothing,
+    target_parameters::Union{Nothing, Vector{T1}} = nothing,
     epsilon::Float64 = 1e-6,
     reltol::Float64 = 1e-6,
     abstol::Float64 = 1e-9,
@@ -54,7 +55,14 @@ function _affine_chambers(
     start_pair_using_newton::Bool = false,
     seed = nothing,
     kwargs...,
-) where {T<:Real}
+) where {T<:Real, T1<:Number}
+
+    if isnothing(f0)
+        f = f0
+    else
+        variable_list = 
+        f = System(f0(HC.variables(f0), target_parameters), variables = HC.variables(f0))
+    end
 
     if !isnothing(seed)
         Random.seed!(seed)

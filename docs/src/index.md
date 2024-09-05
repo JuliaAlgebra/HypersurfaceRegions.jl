@@ -28,19 +28,19 @@ julia> f_2 = x^2 + y^2 - 4;
 julia> f = [f_1; f_2]
 julia> C = chambers(f)
 ChambersResult with 3 chambers:
-=============================
+===============================
 9 complex critical points
-9 real critical points
-╭──────────────┬──────────────────────────────────────────╮
-│ sign pattern │ chambers                                 │
-├──────────────┼──────────────────────────────────────────┤
-│ - -          │ number = 1                               │
-│              │ χ = 1, μ = [1, 0, 0], (weakly) bounded   │
-│ + -          │ number = 1                               │
-│              │ χ = 0, μ = [2, 2, 0], (weakly) bounded   │
-│ + +          │ number = 1                               │
-│              │ χ = 0, μ = [2, 2, 0], unbounded          │
-╰──────────────┴──────────────────────────────────────────╯
+5 real critical points
+╭──────────────┬─────────────────────────────────╮
+│ sign pattern │ chambers                        │
+├──────────────┼─────────────────────────────────┤
+│ + +          │ number = 1                      │
+│              │ χ = 0, μ = [1, 1, 0], unbounded │
+│ - -          │ number = 1                      │
+│              │ χ = 1, μ = [1, 0, 0], bounded   │
+│ + -          │ number = 1                      │
+│              │ χ = 0, μ = [1, 1, 0], bounded   │
+╰──────────────┴─────────────────────────────────╯
 ```
 
 The output shows that $\mathcal U$ has three chambers. The first chamber has sign pattern $++$. This means that, on this chamber, both $f_1$ and $f_2$ are positive. On the second chamber, both $f_1$ and $f_2$ are negative, so it is the contractible chamber in the middle. The software correctly reports that this chamber has Euler characteristic 1. The other two chambers each have one hole and thus have Euler characteristic 0. 
@@ -114,6 +114,8 @@ Functions to call on [Chamber](@ref).
 μ
 critical_points
 is_bounded
+is_unbounded
+is_undecided
 number
 ```
 
@@ -122,8 +124,10 @@ Functions to call on [ChambersResult](@ref).
 nchambers
 nbounded
 nunbounded
+nundecided
 bounded
 unbounded
+undecided
 euler_characteristics
 index_vectors
 ncritical_complex
