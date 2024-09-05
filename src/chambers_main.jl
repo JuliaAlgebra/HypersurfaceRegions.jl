@@ -8,6 +8,7 @@ function get_f_affine(
     var_list::Vector{Variable},
     selected_variable::Variable = var_list[1],
 )
+
     return subs(f, selected_variable => 1.0)
 end
 
@@ -39,7 +40,10 @@ function get_f_infty(
         poly += monomial * x0^k
     end
 
+   
+
     result = get_f_affine(poly, var_list, selected_variable)
+
     if HC.degree(result) == 0
         # need to take log later so we need to make sure the output is not 1 or -1
         result = Expression(2)
@@ -205,12 +209,10 @@ function _chambers(
     critical_points_infty = get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
 
     poly_list_infty_1 = map(fi -> subs(fi, x0 => δ), f0)
-    critical_points_infty_1 = get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
+    critical_points_infty_1 = get_points_at_infinity(poly_list_infty_1, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
 
     poly_list_infty_2 = map(fi -> subs(fi, x0 => -δ), f0)
-    critical_points_infty_2 = get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
-
-    @show critical_points_infty_1, critical_points_infty_2
+    critical_points_infty_2 = get_points_at_infinity(poly_list_infty_2, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
 
     ####
     # Stage 3: connecting critical points at infinity to affine chambers
@@ -269,16 +271,20 @@ function _chambers(
 
     # critical points at the strip around infinity
     for critical_point in vcat(critical_points_infty_1, critical_points_infty_2)
-        C = _membership(affine_output, [1; critical_point] ./ δ, ∇logg)
+        unbounded_point = point_unbounded(prod_f, critical_point)
+        C = _membership(affine_output, unbounded_point, ∇logg)
 
         if !isnothing(C) 
-            append!(undecided, number(C))
+            if !in(number(C), unbounded)
+                append!(undecided, number(C))
+            end
         end
 
         j += 1
         set_ncritical_points_classified!(progress, j)
     end
 
+   
     still_to_decide = setdiff(1:N, vcat(unbounded, undecided))
     for i in still_to_decide
         C = R[i]

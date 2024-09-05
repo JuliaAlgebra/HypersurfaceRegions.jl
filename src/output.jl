@@ -268,6 +268,7 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
         table[i, 1] = join([v == 1 ? "+" : v == -1 ? "-" : string(v) for v in s], " ")
         table[i, 2] = "number = $(length(w))"
         i += 1
+
         for wᵢ in w
             chamber = all_chambers[wᵢ]
             sign = chamber.sign
@@ -287,6 +288,7 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
             end
             i += 1
         end
+        
     end
 
     ds = displaysize()
@@ -305,7 +307,7 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
     )
     h3 = Highlighter(
         f = (data, i, j) -> (last(data[i, j], 9) == "undecided");
-        crayon = crayon"cyan",
+        crayon = crayon"magenta",
     )
 
     pretty_table(
@@ -315,7 +317,7 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
         tf = tf_unicode_rounded,
         alignment = :l,
         display_size = ds,
-        highlighters = (h1, h2),
+        highlighters = (h1, h2, h3),
     )
 end
 
