@@ -44,9 +44,10 @@ end
 
 
 function _affine_chambers(
-    f::System,
+    f0::System,
     progress::Union{Nothing,ChambersProgress};
     s::Union{Nothing,Vector{T}} = nothing,
+    target_parameters::Union{Nothing, Vector{T1}} = nothing,
     epsilon::Float64 = 1e-6,
     reltol::Float64 = 1e-6,
     abstol::Float64 = 1e-9,
@@ -54,53 +55,35 @@ function _affine_chambers(
     start_pair_using_newton::Bool = false,
     seed = nothing,
     kwargs...,
-) where {T<:Real}
+) where {T<:Real, T1<:Number}
+
+    if isnothing(f0)
+        f = f0
+    else
+        variable_list = 
+        f = System(f0(HC.variables(f0), target_parameters), variables = HC.variables(f0))
+    end
 
     if !isnothing(seed)
         Random.seed!(seed)
     end
-
-    variable_list = HC.variables(f)
-    f_denom = generate_random_degree_2(variable_list)
-    f_list = [f.expressions; f_denom]
-    k = length(f_list)
-
-
-    # define parameter if not provided
-    if isnothing(s)
-        u_last = ceil(sum(degrees(f)) / 2) + 1
-        s = [ones(Float64, k - 1); -u_last]
-        # check if the input parameter is correct
-    else
-        if length(s) != k
-            error(
-                "The length of the provided list of polynomials does not match the number of parameters.",
-            )
-        elseif any(s[1:(k-1)] .≤ 0) || s[k] ≥ 0
-            error("Not all parameters have the correct sign.")
-        elseif sum(degrees(f) .* s[1:(k-1)]) + 2 * s[k] > 0
-            error(
-                "The parameters `s` don't satisfy `-2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)``.",
-            )
-        end
-    end
-
-    # solve critical points 
-    m_1 = compute_critical_points(
-        f_list,
-        variable_list,
-        s,
-        monodromy_options,
-        progress;
-        start_pair_using_newton = start_pair_using_newton,
-        kwargs...,
-    )
-
-    if isnothing(m_1)
+    
+    s = set_up_s(s,f)
+    M_1, f_list = compute_critical_points(f,
+                        s,
+                        monodromy_options,
+                        progress,
+                        start_pair_using_newton;
+                        kwargs...)
+    if isnothing(M_1)
         println("Couldn't solve the critical equations")
         return nothing
     end
-    real_sols = real_solutions(m_1)
+    real_sols = real_solutions(M_1)
+
+    f_denom = f_list[end]
+    variable_list = HC.variables(f)
+    k = length(f_list)
 
     logg = sum(s[i] * log(f_list[i]^2) for i = 1:k)
     ∇, Hlogg = gradient_hessian(logg, variable_list)
@@ -154,7 +137,7 @@ function _affine_chambers(
     return ChambersResult(
         chambers,
         length(chambers),
-        nnonsingular(m_1),
+        nnonsingular(M_1),
         length(real_sols),
         nothing,
         g,
@@ -173,27 +156,51 @@ end
 
 
 
+
 """
     compute_critical_points
 
 Computes the critical points of the rational function using `HomotopyContinuation.jl`.
-
 """
 function compute_critical_points(
-    f_list::Vector{Expression},
-    variable_list::Vector{Variable},
+    f::System,
     s::Vector{T},
     monodromy_options::MonodromyOptions,
-    progress::Union{Nothing,ChambersProgress};
-    start_pair_using_newton::Bool = false,
+    progress::Union{Nothing,ChambersProgress},
+    start_pair_using_newton::Bool;
+    target_parameters::Union{Nothing, Vector{T1}, Vector{Vector{T2}}} = nothing, 
     kwargs...,
-) where {T<:Real}
+) where {T<:Real, T1,T2 <: Number}
+
+    variable_list = HC.variables(f)
+    parameter_list = HC.parameters(f)
+    if isnothing(target_parameters) 
+        if length(parameter_list) > 0
+            error("Number of parameters don't match.")
+        end
+    elseif typeof(target_parameters) <: Vector{Vector{T}} where T<:Number
+        if length(target_parameters[1]) != length(parameter_list)
+            error("Number of parameters don't match.")
+        end
+    elseif length(target_parameters) != length(parameter_list)
+        error("Number of parameters don't match.")
+    end
+
+    if typeof(target_parameters) <: Vector{T} where T<:Number
+        target_parameters = [target_parameters]
+    end
+
+    f_denom = generate_random_degree_2(variable_list)
+    f_list = [f.expressions; f_denom]
+    k = length(f_list)
+
 
     start_monodromy!(progress)
     show_progress = !isnothing(progress)
 
     k = length(f_list)
     n = length(variable_list)
+    m = length(parameter_list)
 
 
     if k ≤ n
@@ -208,25 +215,29 @@ function compute_critical_points(
     J = HC.differentiate(Df, u)
 
     if start_pair_using_newton
-        S = System(Df, variables = variable_list, parameters = u)
-        m = HC.monodromy_solve(
+        S = System(Df, variables = variable_list, parameters = [u; parameter_list])
+        M = HC.monodromy_solve(
             S;
             options = monodromy_options,
             show_progress = show_progress,
         )
-        target_parameters = s
-        if nsolutions(m) > 0
-            m_1 = HC.solve(
+        if isnothing(target_parameters) 
+            all_target_parameters = s
+        else
+            all_target_parameters = [[s; p] for p in target_parameters]
+        end
+        if nsolutions(M) > 0
+            M_1 = HC.solve(
                 S,
-                solutions(m);
-                start_parameters = parameters(m),
-                target_parameters = target_parameters,
+                solutions(M);
+                start_parameters = parameters(M),
+                target_parameters = all_target_parameters,
                 show_progress = show_progress,
                 kwargs...,
             )
 
             finish_monodromy!(progress)
-            return m_1
+            return M_1
         end
     end
 
@@ -237,24 +248,30 @@ function compute_critical_points(
     J_t = [J + A B]
 
     x1 = randn(ComplexF64, n)
-    p1 = compute_parameter(J_t, variable_list, x1)
+    q1 = randn(ComplexF64, m)
+    p1 = compute_parameter(J_t, variable_list, parameter_list, x1, q1)
+
     if all(abs.(p1) .> 1e-6) # first try
-        S = System(Df_t, variables = variable_list, parameters = [u; v; t])
-        m = HC.monodromy_solve(
+        S = System(Df_t, variables = variable_list, parameters = [u; v; t; parameter_list])
+        M = HC.monodromy_solve(
             S,
             [x1],
-            [p1; 1.0];
+            [p1; 1.0; q1];
             options = monodromy_options,
             show_progress = show_progress,
             kwargs...,
         )
 
-        target_parameters = [s; randn(ComplexF64, K - k); 0.0]
+        if isnothing(target_parameters)
+            all_target_parameters = [s; randn(ComplexF64, K - k); 0.0]
+        else
+            all_target_parameters = [[s; randn(ComplexF64, K - k); 0.0; p] for p in target_parameters]
+        end
     end
 
-    if nsolutions(m) == 0 # second try, if first failed
-        S = System(Df, variables = variable_list, parameters = u)
-        m = HC.monodromy_solve(
+    if nsolutions(M) == 0 # second try, if first failed
+        S = System(Df, variables = variable_list, parameters = [u; parameter_list])
+        M = HC.monodromy_solve(
             S;
             options = monodromy_options,
             show_progress = show_progress,
@@ -262,32 +279,60 @@ function compute_critical_points(
         )
 
         finish_monodromy!(progress)
-        target_parameters = s
         if nsolutions(m) == 0 # give up
-
-            finish_monodromy!(progress)
             return nothing
+        end
+
+        if isnothing(target_parameters)
+            all_target_parameters = [s; p]
+        else
+            all_target_parameters = [[s; p] for p in target_parameters]
         end
     end
 
 
-    m_1 = HC.solve(
+    M_1 = HC.solve(
         S,
-        solutions(m);
-        start_parameters = parameters(m),
-        target_parameters = target_parameters,
+        solutions(M);
+        start_parameters = parameters(M),
+        target_parameters = all_target_parameters,
         show_progress = show_progress,
         kwargs...,
     )
 
     finish_monodromy!(progress)
-    return m_1
+    return M_1, f_list
 end
 
-function compute_parameter(J, variable_list, x0)
+function set_up_s(s, f)
+    k = length(f) + 1
+
+    # define parameter if not provided
+    if isnothing(s)
+        u_last = ceil(sum(degrees(f)) / 2) + 1
+        s = [ones(Float64, k - 1); -u_last]
+        # check if the input parameter is correct
+    else
+        if length(s) != k
+            error(
+                "The length of the provided list of polynomials does not match the number of parameters.",
+            )
+        elseif any(s[1:(k-1)] .≤ 0) || s[k] ≥ 0
+            error("Not all parameters have the correct sign.")
+        elseif sum(degrees(f) .* s[1:(k-1)]) + 2 * s[k] > 0
+            error(
+                "The parameters `s` don't satisfy `-2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)``.",
+            )
+        end
+    end
+
+    s
+end
+
+function compute_parameter(J, variable_list, parameter_list, x0, q0)
     M =
         [
-            isa(entry, Expression) ? evaluate(entry, variable_list => x0) : entry for
+            isa(entry, Expression) ? evaluate(entry, variable_list => x0, parameter_list => q0) : entry for
             entry in J
         ] |> Matrix{ComplexF64}
     N = LinearAlgebra.nullspace(M)

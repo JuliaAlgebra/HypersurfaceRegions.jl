@@ -40,6 +40,14 @@ using Test
 
     R1 = membership(R, [3 / 2; 0])
     @test Base.sign(R1) == [1; -1]
+
+    # parameters 
+    @var p
+    f_1 = x^2 + y^2 - p
+    f_2 = x^2 + y^2 - 4
+    f = System([f_1; f_2], parameters = [p])
+    R = chambers(f, target_parameters = [0.0])
+    @test isa(R, ChambersResult)
 end
 
 @testset "a circle and a line" begin
@@ -55,7 +63,7 @@ end
     @test all(Ci -> !is_bounded(Ci), D[1])
 end
 
-@testset "a circle and a hyperbola" begin
+@testset "a circle and a parabola" begin
     @var x y
     f_1 = y^2 + x^2 - 1
     f_2 = y - x^2
@@ -63,16 +71,11 @@ end
     R = chambers(f)
     p = projective_chambers(R)
 
-    @test nbounded(R) == 3
+    @test nbounded(R) == 2
+    @test nunbounded(R) == 1
+    @test nundecided(R) == 1
+
     @test length(p) == 4
-
-    (a, b) = randn(2, 2) * [x; y]
-    f_3 = b^2 + a^2 - 1
-    f_4 = b - a^2
-    F = System([f_3; f_4])
-    R = chambers(F)
-    @test nbounded(R) == 3
-
 end
 
 @testset "elliptope" begin
@@ -104,4 +107,17 @@ end
     R = chambers(f_list)
 
     @test isa(R, ChambersResult)
+end
+
+
+@testset "a net plane of sextics" begin
+    @var a b
+    f = [a, a + 1, 3a - 1, 3a + b + 6, 3a + b - 3,
+            9a^3 - 3a^2*b + a*b^2 - 3a - b + 2]
+    C = chambers(f)
+    P = projective_chambers(C)
+    K = length.(P)
+
+    @test count(k -> k == 1, K) == 13
+    @test count(k -> k == 2, K) == 2
 end
