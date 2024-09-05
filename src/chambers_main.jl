@@ -56,7 +56,7 @@ end
 function get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
     #
     if all(HC.degree.(poly_list_infty) .== 0)
-        critical_points_infty = Vector{Vector{ComplexF64}}()
+        critical_points_infty = [randn(Float64, length(variable_list) - 1)]
     else
         infty_output = _affine_chambers(
             System(poly_list_infty, variables = variable_list[2:end]),
@@ -71,7 +71,7 @@ function get_points_at_infinity(poly_list_infty, variable_list, progress, s, eps
         )
 
         if isnothing(infty_output)
-            critical_points_infty = Vector{Vector{ComplexF64}}()
+            critical_points_infty = [randn(Float64, length(variable_list) - 1)]
         end
 
         critical_points_infty = map(infty_output.chamber_list) do chamber
@@ -86,18 +86,30 @@ end
 
 # input a point a at infinity (P^n-R^n)
 # output a point in the affine linear space in some unbounded chamber of R^n-V(f)
-function point_unbounded(f::Expression, a::Array{T}) where {T<:Real}
+function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     new_a = vcat(1, a)
     @unique_var t
     f_t = subs(f, HC.variables(f) => t * new_a)
     S = HC.solve([f_t], t; show_progress = false)
-    R = real_solutions(S)
+    R = first.(real_solutions(S))
+    if δ > 0
+        filter!(r -> inv(r) > δ, R)
+    elseif δ < 0
+        filter!(r -> inv(r) < δ, R)
+    end
 
     if isempty(R)
-        t = 1.0
+            t = 1.0
     else
-        m = maximum([abs(maximum(R)[1]), abs(minimum(R)[1])])
-        t = 5.0 * (m + 1) # relative increase of m
+        
+        if δ == 0.0
+            m = maximum([abs(maximum(R)), abs(minimum(R))])
+            t = 5.0 * (m + 1) # relative increase of m
+        elseif δ > 0 
+            t = 5.0 * (maximum(R) + 1) # relative increase of m
+        else δ < 0
+            t = 5.0 * (minimum(R) - 1) # relative increase of m
+        end
     end
     return t * new_a
 end
@@ -159,7 +171,7 @@ end
 function _chambers(
     f::System,
     progress::Union{Nothing,ChambersProgress};
-    δ::Float64 = 1e-8,
+    δ::Float64 = 0.1,
     projective_fusion::Bool = true,
     s::Union{Nothing,Vector{T}} = nothing,
     epsilon::Float64 = 1e-6,
@@ -236,8 +248,8 @@ function _chambers(
     ∇ = HC.differentiate(logg, variable_list)
     ∇logg = fixed(System(∇, variables = variable_list))
 
-
-    set_ncritical_points!(progress, length(critical_points_infty) + length(critical_points_infty_1) + length(critical_points_infty_2))
+    nall_crit = length(critical_points_infty) + length(critical_points_infty_1) + length(critical_points_infty_2)
+    set_ncritical_points!(progress, nall_crit)
     j = 0
 
     unbounded = Vector{Int}()
@@ -246,7 +258,7 @@ function _chambers(
     
     # critical points at infinity
     for critical_point in critical_points_infty
-        unbounded_point = point_unbounded(prod_f, critical_point)
+        unbounded_point = point_unbounded(prod_f, critical_point, 0.0)
         C1 = _membership(affine_output, unbounded_point, ∇logg)
         
         if !isnothing(C1) 
@@ -270,8 +282,21 @@ function _chambers(
     end
 
     # critical points at the strip around infinity
-    for critical_point in vcat(critical_points_infty_1, critical_points_infty_2)
-        unbounded_point = point_unbounded(prod_f, critical_point)
+    for critical_point in critical_points_infty_1
+        unbounded_point = point_unbounded(prod_f, critical_point, δ)
+        C = _membership(affine_output, unbounded_point, ∇logg)
+        
+        if !isnothing(C) 
+            if !in(number(C), unbounded)
+                append!(undecided, number(C))
+            end
+        end
+
+        j += 1
+        set_ncritical_points_classified!(progress, j)
+    end
+    for critical_point in critical_points_infty_2
+        unbounded_point = point_unbounded(prod_f, critical_point, -δ)
         C = _membership(affine_output, unbounded_point, ∇logg)
 
         if !isnothing(C) 
@@ -285,11 +310,12 @@ function _chambers(
     end
 
    
-    still_to_decide = setdiff(1:N, vcat(unbounded, undecided))
+    still_to_decide = setdiff(collect(1:N), vcat(unbounded, undecided))
     for i in still_to_decide
         C = R[i]
         c = critical_points(C) |> first
         invc = inv(c[1])
+
         if invc > δ || invc < -δ
             append!(bounded, number(C))
         else
