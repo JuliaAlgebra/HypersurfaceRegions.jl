@@ -92,10 +92,12 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     f_t = subs(f, HC.variables(f) => t * new_a)
     S = HC.solve([f_t], t; show_progress = false)
     R = first.(real_solutions(S))
+
+    invδ = inv(δ)
     if δ > 0
-        filter!(r -> inv(r) > δ, R)
+        filter!(r -> r < invδ && r > 0, R)
     elseif δ < 0
-        filter!(r -> inv(r) < δ, R)
+        filter!(r -> r > invδ && r < 0, R)
     end
 
     if isempty(R)
@@ -103,17 +105,19 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     else
         
         if δ == 0.0
-            m = maximum([abs(maximum(R)), abs(minimum(R))])
+            m = max(abs(maximum(R)), abs(minimum(R)))
             t = 5.0 * (m + 1) # relative increase of m
         elseif δ > 0 
-            t = 5.0 * (maximum(R) + 1) # relative increase of m
-            if inv(t) < δ
-                t = maximum(R) + min(5.0, (inv(δ)-maximum(R))/2)
+            m = maximum(R)
+            t = 5.0 * (m + 1) # relative increase of m
+            if t > invδ
+                t = sqrt(invδ * m)
             end
         elseif δ < 0
-            t = 5.0 * (minimum(R) - 1) # relative increase of m
-            if inv(t) > δ
-                t = minimum(R) - min(5.0, (minimum(R)-inv(δ))/2)
+            m = minimum(R)
+            t = 5.0 * (m - 1) # relative decrease of m
+            if t < invδ
+                t = -sqrt(abs(invδ) * abs(m))
             end
         end
 
