@@ -83,7 +83,7 @@ function showvalues(progress::RegionsProgress)
             )
         end
     elseif progress.current_stage == 2
-        text = [("Computing regions at infinity:", "")]
+        text = [("Computing regions at infinity", "")]
         if progress.monodromy == 0 && progress.ncritical_points > 0
             n = progress.ncritical_points_classified
             N = progress.ncritical_points
