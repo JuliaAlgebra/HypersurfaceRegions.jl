@@ -1,4 +1,4 @@
-module ComputingRegions
+module HypersurfaceRegions
 
 import LinearAlgebra, LightGraphs, Random
 import HomotopyContinuation

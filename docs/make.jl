@@ -1,3 +1,3 @@
-using Documenter, ComputingRegions
+using Documenter, HypersurfaceRegions
 
-makedocs(sitename = "ComputingRegions.jl")
+makedocs(sitename = "HypersurfaceRegions.jl")
