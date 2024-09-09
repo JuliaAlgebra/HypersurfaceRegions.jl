@@ -57,4 +57,4 @@ RegionsResult with 3 regions:
 The output shows that $\mathcal U$ has three regions. The first region has sign pattern $++$. This means that, on this region, both $f_1$ and $f_2$ are positive. On the second region, both $f_1$ and $f_2$ are negative, so it is the contractible region in the middle. The software correctly reports that this region has Euler characteristic 1. The other two regions each have one hole and thus have Euler characteristic 0. 
 
 [docs-stable-img]: https://img.shields.io/badge/docs-online-blue.svg
-[docs-stable-url]: https://juliaalgebra.github.io/Regions.jl/
+[docs-stable-url]: https://juliaalgebra.github.io/HypersurfaceRegions.jl/
