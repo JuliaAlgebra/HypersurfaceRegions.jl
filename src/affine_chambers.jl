@@ -1,31 +1,31 @@
-export affine_chambers
+export affine_regions
 
 
 """
-    affine_chambers(f::Vector{Expression})
-    affine_chambers(f::System)
+    affine_regions(f::Vector{Expression})
+    affine_regions(f::System)
 
 Input a list of affine hypersurfaces 'f = [f_1,...f_k]'. 
-Outputs the chambers in the complement of the hypersurface arrangement, their sign patterns, Euler characteristic and the indices of the critical points in each chamber.
-Accepts the same options as [`chambers`](@ref).
+Outputs the regions in the complement of the hypersurface arrangement, their sign patterns, Euler characteristic and the indices of the critical points in each region.
+Accepts the same options as [`regions`](@ref).
 
 ##  Example
 ```julia
-using Chambers
+using ComputingRegions
 @var x y
 f = [x^2 + y^2 - 1; x^2 + y^2 - 4];
-affine_chambers(f)
+affine_regions(f)
 ```
 """
-affine_chambers(f::Vector{Expression}; kwargs...) = affine_chambers(System(f); kwargs...)
-function affine_chambers(f::System; show_progress::Bool = true, kwargs...)
+affine_regions(f::Vector{Expression}; kwargs...) = affine_regions(System(f); kwargs...)
+function affine_regions(f::System; show_progress::Bool = true, kwargs...)
 
     #  ProgressMeter
     if show_progress
-        progress = ChambersProgress(
+        progress = RegionsProgress(
             PM.ProgressUnknown(
                 dt = 1.0,
-                desc = "Computing chambers...",
+                desc = "Computing regions...",
                 enabled = true,
                 spinner = true,
             ),
@@ -36,16 +36,16 @@ function affine_chambers(f::System; show_progress::Bool = true, kwargs...)
 
     set_stage!(progress, 1)
     update_progress!(progress)
-    R = _affine_chambers(f, progress; kwargs...)
+    R = _affine_regions(f, progress; kwargs...)
     finish_progress!(progress)
 
     R
 end
 
 
-function _affine_chambers(
+function _affine_regions(
     f0::System,
-    progress::Union{Nothing,ChambersProgress};
+    progress::Union{Nothing,RegionsProgress};
     s::Union{Nothing,Vector{T}} = nothing,
     target_parameters::Union{Nothing, Vector{T1}} = nothing,
     epsilon::Float64 = 1e-6,
@@ -111,7 +111,7 @@ function _affine_chambers(
     )
 
     # structure output
-    chambers = Vector{Chamber}()
+    regions = Vector{Region}()
     j = 1
     for (sign, par_list) in pairs(sign_partition)
         for par in par_list
@@ -125,18 +125,18 @@ function _affine_chambers(
                     euler_char += 1
                 end
             end
-            R = Chamber(sign, euler_char, μ, real_sols[par], nothing, nothing, j)
+            R = Region(sign, euler_char, μ, real_sols[par], nothing, nothing, j)
             j += 1
 
-            push!(chambers, R)
+            push!(regions, R)
         end
     end
 
     g = (f, f_denom, s)
 
-    return ChambersResult(
-        chambers,
-        length(chambers),
+    return RegionsResult(
+        regions,
+        length(regions),
         nnonsingular(M_1),
         length(real_sols),
         nothing,
@@ -166,7 +166,7 @@ function compute_critical_points(
     f::System,
     s::Vector{T},
     monodromy_options::MonodromyOptions,
-    progress::Union{Nothing,ChambersProgress},
+    progress::Union{Nothing,RegionsProgress},
     start_pair_using_newton::Bool;
     target_parameters::Union{Nothing, Vector{T1}, Vector{Vector{T2}}} = nothing, 
     kwargs...,

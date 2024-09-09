@@ -1,4 +1,4 @@
-module Chambers
+module Regions
 
 import LinearAlgebra, LightGraphs, Random
 import HomotopyContinuation
@@ -21,8 +21,8 @@ include("output.jl")
 include("hessian.jl")
 include("path_tracking.jl")
 include("partition.jl")
-include("affine_chambers.jl")
+include("affine_regions.jl")
 include("membership.jl")
-include("chambers_main.jl")
+include("regions_main.jl")
 
 end

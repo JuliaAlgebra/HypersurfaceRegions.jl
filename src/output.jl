@@ -1,12 +1,12 @@
-export ChambersResult,
-    Chamber,
+export RegionsResult,
+    Region,
     χ,
     μ,
     critical_points,
     is_bounded,
     g,
-    chambers,
-    nchambers,
+    regions,
+    nregions,
     nbounded,
     nunbounded,
     nundecided,
@@ -20,128 +20,128 @@ export ChambersResult,
     index_vectors,
     ncritical_complex,
     ncritical_real,
-    projective_chambers,
+    projective_regions,
     sign,
     number,
     variables
 
 """
-    Chamber
+    Region
 
-A struct that contains all information about a chamber.
+A struct that contains all information about a region.
 """
-struct Chamber
+struct Region
     sign::Vector{Int}
     χ::Int
     μ::Vector{Int}
     critical_points::Union{Vector{Float64},Vector{Vector{Float64}}}
     g::Union{Nothing,Tuple{System,Expression,Vector{Int}}}
     is_bounded::Union{Nothing,Int} # 0 = unbounded, 1 = bounded, 2 = undecided
-    chamber_number::Int
+    region_number::Int
 end
 
 """
-    sign(C::Chamber)
+    sign(C::Region)
 
 Returns the sign vector.
 """
-Base.sign(C::Chamber) = C.sign
+Base.sign(C::Region) = C.sign
 
 """
-    χ(C::Chamber)
+    χ(C::Region)
 
 Returns the Euler characteristic.
 """
-χ(C::Chamber) = C.χ
+χ(C::Region) = C.χ
 
 """
-    μ(C::Chamber)
+    μ(C::Region)
 
 Returns the index vector.
 """
-μ(C::Chamber) = C.μ
+μ(C::Region) = C.μ
 
 """
-    critical_points(C::Chamber)
+    critical_points(C::Region)
 
 Returns the critical points in `C`.
 """
-critical_points(C::Chamber) = C.critical_points
+critical_points(C::Region) = C.critical_points
 
 """
-    is_unbounded(C::Chamber)
+    is_unbounded(C::Region)
 
 Returns a boolean that is `true`, if `C` is undecided. 
 """
-is_unbounded(C::Chamber) = C.is_bounded == 0
+is_unbounded(C::Region) = C.is_bounded == 0
 
 """
-    is_bounded(C::Chamber)
+    is_bounded(C::Region)
 
 Returns a boolean that is `true`, if `C` is bounded. 
 """
-is_bounded(C::Chamber) = C.is_bounded == 1
+is_bounded(C::Region) = C.is_bounded == 1
 
 """
-    is_undecided(C::Chamber)
+    is_undecided(C::Region)
 
 Returns a boolean that is `true`, if the algorithm could not decided whether `C` is bounded or not.
 """
-is_undecided(C::Chamber) = C.is_bounded == 2
+is_undecided(C::Region) = C.is_bounded == 2
 
 """
-    number(C::Chamber)
+    number(C::Region)
 
-Each `Chamber` in a `ChambersResult` is assigned a number. 
+Each `Region` in a `RegionsResult` is assigned a number. 
 """
-number(C::Chamber) = C.chamber_number
+number(C::Region) = C.region_number
 
-g(C::Chamber) = C.g
+g(C::Region) = C.g
 
 
 """
-    ChambersResult
+    RegionsResult
 
-A struct that collects all chambers in the complement of a hypersurface arragement.
+A struct that collects all regions in the complement of a hypersurface arragement.
 """
-struct ChambersResult
-    chamber_list::Vector{Chamber}
-    nchambers::Int
+struct RegionsResult
+    region_list::Vector{Region}
+    nregions::Int
     ncritical_complex::Int
     ncritical_real::Int
-    projective_chambers::Union{Nothing,Vector{Vector{Int}}}
+    projective_regions::Union{Nothing,Vector{Vector{Int}}}
     g::Tuple{System,Expression,Vector{Int}}
 end
 
 """
-    chambers(C::ChambersResult)
+    regions(C::RegionsResult)
 
-Returns the vector of chambers in `C`.
+Returns the vector of regions in `C`.
 """
-function chambers(C::ChambersResult)
-    out = map(C.chamber_list) do Cᵢ
-        Chamber(Cᵢ.sign, Cᵢ.χ, Cᵢ.μ, Cᵢ.critical_points, C.g, Cᵢ.is_bounded, Cᵢ.chamber_number)
+function regions(C::RegionsResult)
+    out = map(C.region_list) do Cᵢ
+        Region(Cᵢ.sign, Cᵢ.χ, Cᵢ.μ, Cᵢ.critical_points, C.g, Cᵢ.is_bounded, Cᵢ.region_number)
     end
     return out
 end
 
 """
-    projective_chambers(C::ChambersResult)
+    projective_regions(C::RegionsResult)
 
-Returns a vector of vectors. The entries of the vectors are those chambers in `C`, which are fused in projective space.
+Returns a vector of vectors. The entries of the vectors are those regions in `C`, which are fused in projective space.
 
-The following code will return a vector of vectors of type `Chamber`:
+The following code will return a vector of vectors of type `Region`:
 ```julia
-using Chambers
+using ComputingRegions
 @var x y
 f = [x^2 + y^2 - 1; x^2 + y^2 - 4];
-C = chambers(f)
-p = projective_chambers(C)
+C = regions(f)
+p = projective_regions(C)
 ```
 """
-function projective_chambers(C::ChambersResult) 
-    c = chambers(C)
-    p = C.projective_chambers
+function projective_regions(C::RegionsResult) 
+    c = regions(C)
+    p = C.projective_regions
     P = map(p) do pᵢ
         filter(ci -> in(number(ci), pᵢ), c)
     end
@@ -150,98 +150,98 @@ function projective_chambers(C::ChambersResult)
 end
 
 """
-    nchambers(C::ChambersResult)
+    nregions(C::RegionsResult)
 
-Returns the number of chambers in F.
+Returns the number of regions in F.
 """
-nchambers(C::ChambersResult) = C.nchambers
-
-"""
-    nbounded(C::ChambersResult)
-
-Returns the number of (weakly) bounded chambers in `C`.
-"""
-nbounded(C::ChambersResult) = count(is_bounded, chambers(C))
+nregions(C::RegionsResult) = C.nregions
 
 """
-    nunbounded(C::ChambersResult)
+    nbounded(C::RegionsResult)
 
-Returns the number of unbounded chambers in `C`.
+Returns the number of (weakly) bounded regions in `C`.
 """
-nunbounded(C::ChambersResult) = count(is_unbounded, chambers(C))
-
-"""
-    nundecided(C::ChambersResult)
-
-Returns the number of chambers in `C`, where bounded or unbounded could not be decided.
-"""
-nundecided(C::ChambersResult) = count(is_undecided, chambers(C))
+nbounded(C::RegionsResult) = count(is_bounded, regions(C))
 
 """
-    bounded(C::ChambersResult)
+    nunbounded(C::RegionsResult)
 
-Returns the (weakly) bounded chambers in `C`.
+Returns the number of unbounded regions in `C`.
 """
-bounded(C::ChambersResult) = filter(is_bounded, chambers(C))
-
-"""
-    unbounded(C::ChambersResult)
-
-Returns the unbounded chambers in `C`.
-"""
-unbounded(C::ChambersResult) = filter(is_unbounded, chambers(C))
+nunbounded(C::RegionsResult) = count(is_unbounded, regions(C))
 
 """
-    undecided(C::ChambersResult)
+    nundecided(C::RegionsResult)
 
-Returns the number of chambers in `C`, where bounded or unbounded could not be decided.
+Returns the number of regions in `C`, where bounded or unbounded could not be decided.
 """
-undecided(C::ChambersResult) = filter(is_undecided, chambers(C))
-
-"""
-    euler_characteristics(C::ChambersResult)
-
-Returns the Euler characteristics of the chambers in `C`.
-"""
-euler_characteristics(C::ChambersResult) = map(r -> χ(r), chambers(C))
-χ(C::ChambersResult) = euler_characteristics(C)
+nundecided(C::RegionsResult) = count(is_undecided, regions(C))
 
 """
-    euler_characteristics(C::ChambersResult)
+    bounded(C::RegionsResult)
 
-Returns the index vectors of the chambers in `C`.
+Returns the (weakly) bounded regions in `C`.
 """
-index_vectors(C::ChambersResult) = map(r -> μ(r), chambers(C))
-μ(C::ChambersResult) = index_vectors(C)
+bounded(C::RegionsResult) = filter(is_bounded, regions(C))
 
 """
-    ncritical_complex(C::ChambersResult)
+    unbounded(C::RegionsResult)
+
+Returns the unbounded regions in `C`.
+"""
+unbounded(C::RegionsResult) = filter(is_unbounded, regions(C))
+
+"""
+    undecided(C::RegionsResult)
+
+Returns the number of regions in `C`, where bounded or unbounded could not be decided.
+"""
+undecided(C::RegionsResult) = filter(is_undecided, regions(C))
+
+"""
+    euler_characteristics(C::RegionsResult)
+
+Returns the Euler characteristics of the regions in `C`.
+"""
+euler_characteristics(C::RegionsResult) = map(r -> χ(r), regions(C))
+χ(C::RegionsResult) = euler_characteristics(C)
+
+"""
+    euler_characteristics(C::RegionsResult)
+
+Returns the index vectors of the regions in `C`.
+"""
+index_vectors(C::RegionsResult) = map(r -> μ(r), regions(C))
+μ(C::RegionsResult) = index_vectors(C)
+
+"""
+    ncritical_complex(C::RegionsResult)
 
 Returns the number of complex critical points of the Morse function in `C`.
 """
-ncritical_complex(C::ChambersResult) = C.ncritical_complex
+ncritical_complex(C::RegionsResult) = C.ncritical_complex
 
 """
-    ncritical_real(C::ChambersResult)
+    ncritical_real(C::RegionsResult)
 
 Returns the number of real critical points of the Morse function in `C`.
 """
-ncritical_real(C::ChambersResult) = C.ncritical_real
+ncritical_real(C::RegionsResult) = C.ncritical_real
 
 """
-    g(C::ChambersResult)
+    g(C::RegionsResult)
 
 Returns the Morse function in `C`.
 """
-g(C::ChambersResult) = C.g
+g(C::RegionsResult) = C.g
 
 
 """
-    variables(C::ChambersResult)
+    variables(C::RegionsResult)
 
 Returns the order of variables.
 """
-function variables(C::ChambersResult)
+function variables(C::RegionsResult)
     f, _, _ = g(C)
     HC.HC.variables(f)
 end
@@ -249,21 +249,21 @@ end
 ###############
 ### Show ###
 ###############
-Base.show(C::ChambersResult; crop = true) = Base.show(stdout, R, crop = crop)
-function Base.show(io::IO, C::ChambersResult; crop = true)
+Base.show(C::RegionsResult; crop = true) = Base.show(stdout, R, crop = crop)
+function Base.show(io::IO, C::RegionsResult; crop = true)
 
-    header = "ChambersResult with $(C.nchambers) chambers:"
+    header = "RegionsResult with $(C.nregions) regions:"
     println(io, header)
     println(io, "="^(length(header)))
 
     println(io, "$(C.ncritical_complex) complex critical points")
     println(io, "$(C.ncritical_real) real critical points")
 
-    all_chambers = C.chamber_list
-    sign_list = [chamber.sign for chamber in all_chambers]
+    all_regions = C.region_list
+    sign_list = [region.sign for region in all_regions]
     unique_signs = unique(sign_list)
 
-    k = length(unique_signs) + nchambers(C)
+    k = length(unique_signs) + nregions(C)
     table = Matrix{String}(undef, k, 2)
 
     which_sign = [findall(sign -> sign == s, sign_list) for s in unique_signs]
@@ -275,11 +275,11 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
         i += 1
 
         for wᵢ in w
-            chamber = all_chambers[wᵢ]
-            sign = chamber.sign
-            b = chamber.is_bounded
-            χ = chamber.χ
-            μ = chamber.μ
+            region = all_regions[wᵢ]
+            sign = region.sign
+            b = region.is_bounded
+            χ = region.χ
+            μ = region.μ
 
             table[i, 1] = ""
             if isnothing(b)
@@ -317,7 +317,7 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
 
     pretty_table(
         table;
-        header = ["sign pattern", "chambers"],
+        header = ["sign pattern", "regions"],
         header_crayon = crayon"green",
         tf = tf_unicode_rounded,
         alignment = :l,
@@ -326,11 +326,11 @@ function Base.show(io::IO, C::ChambersResult; crop = true)
     )
 end
 
-function Base.show(io::IO, C::Chamber)
+function Base.show(io::IO, C::Region)
     sign = C.sign
     sign_string = join([v == 1 ? "+" : v == -1 ? "-" : string(v) for v in sign], " ")
 
-    header = "Chamber with sign pattern ($sign_string) :"
+    header = "Region with sign pattern ($sign_string) :"
     println(io, header)
 
     b = C.is_bounded

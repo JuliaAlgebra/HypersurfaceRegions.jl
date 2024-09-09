@@ -197,7 +197,7 @@ function partition_of_critical_points_all_signs(
     epsilon::Float64,
     reltol::Float64,
     abstol::Float64,
-    progress::Union{Nothing,ChambersProgress},
+    progress::Union{Nothing,RegionsProgress},
 ) where {T<:AbstractSystem}
 
     ode_log! = set_up_ode(∇logg)

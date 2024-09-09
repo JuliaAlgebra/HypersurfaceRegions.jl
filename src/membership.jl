@@ -2,16 +2,16 @@ export membership
 
 
 """
-    membership(chambers_list::Vector{Chamber}, p::Union{Vector{Float64},Vector{Int64}})
+    membership(regions_list::Vector{Region}, p::Union{Vector{Float64},Vector{Int64}})
 
-Input the list of chambers of the complement of hypersurface arrangements and a point p. 
-Outputs the chamber the point p belongs to.
+Input the list of regions of the complement of hypersurface arrangements and a point p. 
+Outputs the region the point p belongs to.
 
 Options:
 * `reltol = 1e-6`, `abstol = 1e-9`: parameters for the accuracy of the ODE solver.
 ```
 """
-function membership(R::ChambersResult, p::T; kwargs...) where {T<:AbstractArray}
+function membership(R::RegionsResult, p::T; kwargs...) where {T<:AbstractArray}
     f, f_denom, s = g(R)
     f_list = [f.expressions; f_denom]
     k = length(f_list)
@@ -24,7 +24,7 @@ function membership(R::ChambersResult, p::T; kwargs...) where {T<:AbstractArray}
 end
 
 function membership(
-    R::ChambersResult,
+    R::RegionsResult,
     p::Union{Vector{Float64},Vector{Int64}},
     ∇logg::AS;
     kwargs...,
@@ -36,7 +36,7 @@ function membership(
 end
 
 function _membership(
-    R::ChambersResult,
+    R::RegionsResult,
     p::Union{Vector{Float64},Vector{Int64}},
     ∇logg::AS;
     reltol::Float64 = 1e-6,
@@ -45,8 +45,8 @@ function _membership(
 ) where {AS<:AbstractSystem}
     f, _, _ = g(R)
 
-    chambers_list = R.chamber_list
-    critical_points_lists = [chamber.critical_points for chamber in chambers_list]
+    regions_list = R.region_list
+    critical_points_lists = [region.critical_points for region in regions_list]
     critical_points = vcat(critical_points_lists...)
 
     evaluate_values = f(p)
@@ -63,9 +63,9 @@ function _membership(
     end
 
     end_critical_point = critical_points[critical_point_index]
-    for chamber in chambers_list
-        if end_critical_point in chamber.critical_points
-            return chamber
+    for region in regions_list
+        if end_critical_point in region.critical_points
+            return region
         end
     end
 end
