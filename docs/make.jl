@@ -1,3 +1,3 @@
-using Documenter, Regions
+using Documenter, ComputingRegions
 
 makedocs(sitename = "ComputingRegions.jl")
