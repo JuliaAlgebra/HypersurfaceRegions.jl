@@ -238,7 +238,6 @@ function _regions(
     #
 
     # get polynomials at the infinity space
-    poly_list_infty = []
     poly_list = f.expressions
     variable_list = f.variables
     @unique_var x0
