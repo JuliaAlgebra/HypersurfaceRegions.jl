@@ -1,4 +1,4 @@
-using Chambers
+using ComputingRegions
 using Test
 
 @testset "2 concentric circles" begin
@@ -6,36 +6,36 @@ using Test
     f_1 = x^2 + y^2 - 1
     f_2 = x^2 + y^2 - 4
     f = System([f_1; f_2])
-    R = chambers(f)
-    R = chambers(f; show_progress = false)
+    R = regions(f)
+    R = regions(f; show_progress = false)
 
 
     # functions for R
     @test ncritical_complex(R) == 9
-    @test nchambers(R) == 3
+    @test nregions(R) == 3
     @test nbounded(R) == 2
     @test nunbounded(R) == 1
 
     @test length(bounded(R)) == 2
     @test length(unbounded(R)) == 1
 
-    @test count(is_bounded, chambers(R)) == 2
+    @test count(is_bounded, regions(R)) == 2
 
-    # affine chambers
-    A = affine_chambers(f)
-    @test nchambers(A) == 3
+    # affine regions
+    A = affine_regions(f)
+    @test nregions(A) == 3
 
     # seed
-    Rseed = chambers(f, seed = 0x801124df)
-    @test nchambers(Rseed) == 3
+    Rseed = regions(f, seed = 0x801124df)
+    @test nregions(Rseed) == 3
 
     # setting the exponents
-    Rs = chambers(f; s = [1; 1; -20])
-    @test nchambers(Rs) == 3
+    Rs = regions(f; s = [1; 1; -20])
+    @test nregions(Rs) == 3
 
     # membership
     R0 = membership(R, [0; 0])
-    @test isa(R0, Chamber)
+    @test isa(R0, Region)
     @test Base.sign(R0) == [-1; -1]
 
     R1 = membership(R, [3 / 2; 0])
@@ -46,14 +46,14 @@ using Test
     f_1 = x^2 + y^2 - p
     f_2 = x^2 + y^2 - 4
     f = System([f_1; f_2], parameters = [p])
-    R = chambers(f, target_parameters = [0.0])
-    @test isa(R, ChambersResult)
+    R = regions(f, target_parameters = [0.0])
+    @test isa(R, RegionsResult)
 end
 
 @testset "a circle and a line" begin
     @var x y
-    R = chambers([x^2 + y^2 - 1; x])
-    p = projective_chambers(R)
+    R = regions([x^2 + y^2 - 1; x])
+    p = projective_regions(R)
 
     @test length(p) == 3
 
@@ -68,8 +68,8 @@ end
     f_1 = y^2 + x^2 - 1
     f_2 = y - x^2
     f = System([f_1; f_2])
-    R = chambers(f)
-    p = projective_chambers(R)
+    R = regions(f)
+    p = projective_regions(R)
 
     @test nbounded(R) == 2
     @test nunbounded(R) == 1
@@ -82,31 +82,31 @@ end
     @var x y z
     h = 2 * x * y * z - x^2 - y^2 - z^2 + 1
     f = System([h])
-    R = chambers(f)
+    R = regions(f)
 
-    @test nchambers(R) == 6
+    @test nregions(R) == 6
 
     E = [h; 1 - x; 1 + x; 1 - y; 1 + y; 1 - z; 1 + z]
-    RE = chambers(E)
-    @test nchambers(RE) == 43
+    RE = regions(E)
+    @test nregions(RE) == 43
 end
 
 @testset "3 ellipsoids in R^3" begin
     @var x y z
 
     f = [x^2 + y^2 + z^2 - 1, x^2 + y^2 + z^2 - 4, 100 * x^2 + 100 * y^2 + z^2 - 9]
-    R = chambers(f)
+    R = regions(f)
 
-    @test nchambers(R) == 8
+    @test nregions(R) == 8
 end
 
 @testset "6 lines in R^2" begin
     @var x y
     coeff_matrix = randn(3, 6)
     f_list = map(v -> v[1] * x + v[2] * y + v[3], eachcol(coeff_matrix))
-    R = chambers(f_list)
+    R = regions(f_list)
 
-    @test isa(R, ChambersResult)
+    @test isa(R, RegionsResult)
 end
 
 
@@ -114,8 +114,8 @@ end
     @var a b
     f = [a, a + 1, 3a - 1, 3a + b + 6, 3a + b - 3,
             9a^3 - 3a^2*b + a*b^2 - 3a - b + 2]
-    C = chambers(f)
-    P = projective_chambers(C)
+    C = regions(f)
+    P = projective_regions(C)
     K = length.(P)
 
     @test count(k -> k == 1, K) == 13

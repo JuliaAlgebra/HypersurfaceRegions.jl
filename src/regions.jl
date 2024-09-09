@@ -1,4 +1,4 @@
-export chambers
+export regions
 
 
 # input a homogeneous polynomial f with variables x_0...x_n 
@@ -58,7 +58,7 @@ function get_points_at_infinity(poly_list_infty, variable_list, progress, s, eps
     if all(HC.degree.(poly_list_infty) .== 0)
         critical_points_infty = [randn(Float64, length(variable_list) - 1)]
     else
-        infty_output = _affine_chambers(
+        infty_output = _affine_regions(
             System(poly_list_infty, variables = variable_list[2:end]),
             progress;
             s = s,
@@ -74,8 +74,8 @@ function get_points_at_infinity(poly_list_infty, variable_list, progress, s, eps
             critical_points_infty = [randn(Float64, length(variable_list) - 1)]
         end
 
-        critical_points_infty = map(infty_output.chamber_list) do chamber
-            chamber.critical_points[1]
+        critical_points_infty = map(infty_output.region_list) do region
+            region.critical_points[1]
         end
 
     end
@@ -85,7 +85,7 @@ end
 
 
 # input a point a at infinity (P^n-R^n)
-# output a point in the affine linear space in some unbounded chamber of R^n-V(f)
+# output a point in the affine linear space in some unbounded region of R^n-V(f)
 function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     new_a = vcat(1, a)
     @unique_var t
@@ -128,17 +128,17 @@ end
 
 
 """
-    chambers(f::Vector{Expression})
-    chambers(f::System)
+    regions(f::Vector{Expression})
+    regions(f::System)
 
 Input a list of hypersurfaces 'f = [f_1,...f_k]'.
-Outputs the chambers in the complement of the hypersurface arrangement, whether they are bounded or not, their sign patterns, Euler characteristic and the indices of the critical points in each chamber.
+Outputs the regions in the complement of the hypersurface arrangement, whether they are bounded or not, their sign patterns, Euler characteristic and the indices of the critical points in each region.
 
 Options:
 * `δ::Float64 = 1e-4`: Parameter that defines the strip around infinity.
 * `target_parameters`: Specify parameters of the [System](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/systems/) `f` (if its has any).
 * `show_progress = true`: if true, prints the progress of the computation to the terminal.
-* `projective_fusion = true`: if `true`, the algorithm computes which of the chambers are fused at infinity.
+* `projective_fusion = true`: if `true`, the algorithm computes which of the regions are fused at infinity.
 * `s`: exponents of the Morse function `f_1^(s_1) * ... * f_k^(s_k) * q^(s_k+1)`. Here, `s` is a list of integers `[s_1, ..., s_k, s_{k+1}]` such that `s_1, ..., s_k>0, s_{k+1}<0` and `2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)`.
 * `epsilon = 1e-6`: how close from each critical point do we do the path tracking.
 * `reltol = 1e-6`, `abstol = 1e-9`: parameters for the accuracy of the ODE solver.
@@ -148,28 +148,28 @@ Options:
 
 ##  Example
 ```julia
-using Chambers
+using ComputingRegions
 @var x y
 f = [x^2 + y^2 - 1; x^2 + y^2 - 4];
-chambers(f)
+regions(f)
 ```
 
 ## Example with options 
 ```julia
-chambers(f; δ = 1e-4, 
+regions(f; δ = 1e-4, 
             monodromy_options = MonodromyOptions(max_loops_no_progress = 20))
 ```
 """
-chambers(f::Vector{Expression}; kwargs...) = chambers(System(f); kwargs...)
-function chambers(f::System; show_progress::Bool = true, kwargs...)
+regions(f::Vector{Expression}; kwargs...) = regions(System(f); kwargs...)
+function regions(f::System; show_progress::Bool = true, kwargs...)
 
 
     #  ProgressMeter
     if show_progress
-        progress = ChambersProgress(
+        progress = RegionsProgress(
             PM.ProgressUnknown(
                 dt = 0.75,
-                desc = "Computing chambers...",
+                desc = "Computing regions...",
                 enabled = true,
                 spinner = true,
             ),
@@ -180,16 +180,16 @@ function chambers(f::System; show_progress::Bool = true, kwargs...)
 
     sleep(1.0)
     update_progress!(progress)
-    R = _chambers(f, progress; kwargs...)
+    R = _regions(f, progress; kwargs...)
     finish_progress!(progress)
 
     R
 end
 
 
-function _chambers(
+function _regions(
     f0::System,
-    progress::Union{Nothing,ChambersProgress};
+    progress::Union{Nothing,RegionsProgress};
     δ::Float64 = 1e-4,
     target_parameters::Union{Nothing, Vector{T1}} = nothing,
     s::Union{Nothing,Vector{T}} = nothing,
@@ -211,11 +211,11 @@ function _chambers(
     s = set_up_s(s, f)
 
     ####
-    # Stage 1: computing affine chambers
+    # Stage 1: computing affine regions
     set_stage!(progress, 1)
     #
 
-    affine_output = _affine_chambers(
+    affine_output = _affine_regions(
         f,
         progress;
         s = s,
@@ -238,7 +238,6 @@ function _chambers(
     #
 
     # get polynomials at the infinity space
-    poly_list_infty = []
     poly_list = f.expressions
     variable_list = f.variables
     @unique_var x0
@@ -255,14 +254,14 @@ function _chambers(
     critical_points_infty_2 = real_solutions(first(cpt[3]))
 
     ####
-    # Stage 3: connecting critical points at infinity to affine chambers
+    # Stage 3: connecting critical points at infinity to affine regions
     set_ncritical_points!(progress, 0)
     set_stage!(progress, 3)
     #
 
-    # get one point from each chamber
-    R = affine_output.chamber_list
-    N = nchambers(affine_output)
+    # get one point from each region
+    R = affine_output.region_list
+    N = nregions(affine_output)
 
     graph = LG.SimpleGraph(N)
 
@@ -290,17 +289,17 @@ function _chambers(
         C1 = _membership(affine_output, unbounded_point, ∇logg)
         
         if !isnothing(C1) 
-            chamber_1_index = number(C1)
-            append!(unbounded, chamber_1_index)
+            region_1_index = number(C1)
+            append!(unbounded, region_1_index)
 
             if projective_fusion
                 C2 = _membership(affine_output, -unbounded_point, ∇logg)
                 
                 if !isnothing(C2)
-                    chamber_2_index = number(C2)
+                    region_2_index = number(C2)
 
-                    LG.add_edge!(graph, chamber_1_index, chamber_2_index)
-                    append!(unbounded, chamber_2_index)
+                    LG.add_edge!(graph, region_1_index, region_2_index)
+                    append!(unbounded, region_2_index)
                 end
             end
         end
@@ -355,33 +354,33 @@ function _chambers(
     unique!(unbounded)
     unique!(undecided)
 
-    R_new = Vector{Chamber}()
+    R_new = Vector{Region}()
     for i in unbounded
         Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 0, Rᵢ.chamber_number))
+        push!(R_new, Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 0, Rᵢ.region_number))
     end
     for i in bounded
         Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 1, Rᵢ.chamber_number))
+        push!(R_new, Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 1, Rᵢ.region_number))
     end
     for i in undecided
         Rᵢ = R[i]
-        push!(R_new, Chamber(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 2, Rᵢ.chamber_number))
+        push!(R_new, Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 2, Rᵢ.region_number))
     end
 
 
     if projective_fusion
-        projective_chambers = LG.connected_components(graph)
+        projective_regions = LG.connected_components(graph)
     else
-        projective_chambers = nothing
+        projective_regions = nothing
     end
 
-    return ChambersResult(
+    return RegionsResult(
         R_new,
-        nchambers(affine_output),
+        nregions(affine_output),
         ncritical_complex(affine_output),
         ncritical_real(affine_output),
-        projective_chambers,
+        projective_regions,
         g(affine_output),
     )
 

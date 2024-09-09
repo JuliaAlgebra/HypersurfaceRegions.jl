@@ -1,3 +1,3 @@
-using Documenter, Chambers
+using Documenter, Regions
 
-makedocs(sitename = "Chambers.jl")
+makedocs(sitename = "ComputingRegions.jl")
