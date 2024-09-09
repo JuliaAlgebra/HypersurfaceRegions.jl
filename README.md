@@ -1,7 +1,7 @@
 
 [![][docs-stable-img]][docs-stable-url]
 
-# ComputingRegions.jl
+# HypersurfaceRegions.jl
 
 We present a Julia package 
 for computing the *regions* (i.e., connected components) in the complement of an arrangement of real
@@ -32,7 +32,7 @@ corresponds to multiple connected components.
 Let us consider two concentric circles. For instance, we could take the two circles $f_1 = x^2 + y^2 - 1=0$ and $f_2=x^2 + y^2 - 4=0$ centered at the origin. To compute the regions of $\mathcal{U}  =   \\{ u \in \mathbb{R}^2  \mid   f_1(u) \cdot f_2(u)  \not=  0 \\}$ we can use the following code:    
 
 ```julia
-julia> using ComputingRegions
+julia> using HypersurfaceRegions
 julia> @var x y;
 julia> f_1 = x^2 + y^2 - 1;
 julia> f_2 = x^2 + y^2 - 4;

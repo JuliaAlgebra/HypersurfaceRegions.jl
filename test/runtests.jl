@@ -1,4 +1,4 @@
-using ComputingRegions
+using HypersurfaceRegions
 using Test
 
 @testset "2 concentric circles" begin

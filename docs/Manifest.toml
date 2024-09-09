@@ -234,9 +234,9 @@ weakdeps = ["InverseFunctions"]
     [deps.CompositionsBase.extensions]
     CompositionsBaseInverseFunctionsExt = "InverseFunctions"
 
-[[deps.ComputingRegions]]
+[[deps.HypersurfaceRegions]]
 deps = ["Crayons", "DifferentialEquations", "HomotopyContinuation", "LightGraphs", "LinearAlgebra", "PrettyTables", "ProgressMeter", "Random", "Reexport", "SciMLBase"]
-path = "/Users/pb/.julia/dev/ComputingRegions"
+path = "/Users/pb/.julia/dev/HypersurfaceRegions"
 uuid = "6d1d4b64-24a0-4125-b8e7-5a4e0a5017ad"
 version = "0.1.0"
 
