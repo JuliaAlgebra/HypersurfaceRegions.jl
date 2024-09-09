@@ -1,4 +1,4 @@
-module Regions
+module ComputingRegions
 
 import LinearAlgebra, LightGraphs, Random
 import HomotopyContinuation
@@ -23,6 +23,6 @@ include("path_tracking.jl")
 include("partition.jl")
 include("affine_regions.jl")
 include("membership.jl")
-include("regions_main.jl")
+include("regions.jl")
 
 end
