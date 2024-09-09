@@ -7,7 +7,7 @@ export affine_chambers
 
 Input a list of affine hypersurfaces 'f = [f_1,...f_k]'. 
 Outputs the chambers in the complement of the hypersurface arrangement, their sign patterns, Euler characteristic and the indices of the critical points in each chamber.
-Accepts the same options as `chambers`.
+Accepts the same options as [`chambers`](@ref).
 
 ##  Example
 ```julia

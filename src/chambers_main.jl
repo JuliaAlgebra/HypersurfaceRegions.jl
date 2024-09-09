@@ -135,9 +135,11 @@ Input a list of hypersurfaces 'f = [f_1,...f_k]'.
 Outputs the chambers in the complement of the hypersurface arrangement, whether they are bounded or not, their sign patterns, Euler characteristic and the indices of the critical points in each chamber.
 
 Options:
+* `δ::Float64 = 1e-4`: Parameter that defines the strip around infinity.
+* `target_parameters`: Specify parameters of the [System](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/systems/) `f` (if its has any).
 * `show_progress = true`: if true, prints the progress of the computation to the terminal.
 * `projective_fusion = true`: if `true`, the algorithm computes which of the chambers are fused at infinity.
-* `s`: a list of integers `[s_1, ..., s_k, s_{k+1}]` such that `s_1, ..., s_k>0, s_{k+1}<0` and `2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)`.
+* `s`: exponents of the Morse function `f_1^(s_1) * ... * f_k^(s_k) * q^(s_k+1)`. Here, `s` is a list of integers `[s_1, ..., s_k, s_{k+1}]` such that `s_1, ..., s_k>0, s_{k+1}<0` and `2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)`.
 * `epsilon = 1e-6`: how close from each critical point do we do the path tracking.
 * `reltol = 1e-6`, `abstol = 1e-9`: parameters for the accuracy of the ODE solver.
 * `monodromy_options = MonodromyOptions(max_loops_no_progress = 25)`: pass options for [monodromy](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/monodromy/).
@@ -150,6 +152,12 @@ using Chambers
 @var x y
 f = [x^2 + y^2 - 1; x^2 + y^2 - 4];
 chambers(f)
+```
+
+## Example with options 
+```julia
+chambers(f; δ = 1e-4, 
+            monodromy_options = MonodromyOptions(max_loops_no_progress = 20))
 ```
 """
 chambers(f::Vector{Expression}; kwargs...) = chambers(System(f); kwargs...)
