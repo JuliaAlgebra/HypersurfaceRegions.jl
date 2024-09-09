@@ -1,7 +1,7 @@
 name = "Chambers"
 uuid = "6d1d4b64-24a0-4125-b8e7-5a4e0a5017ad"
 authors = ["Paul Breiding, Bernd Sturmfels and Kexin Wang"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
