@@ -138,7 +138,7 @@ Input a list of hypersurfaces 'f = [f_1,...f_k]'.
 Outputs the regions in the complement of the hypersurface arrangement, whether they are bounded or not, their sign patterns, Euler characteristic and the indices of the critical points in each region.
 
 Options:
-* `δ::Float64 = 1e-5`: Parameter that defines the strip around infinity.
+* `δ::Float64 = 1e-6`: Parameter that defines the strip around infinity.
 * `target_parameters`: Specify parameters of the [System](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/systems/) `f` (if its has any).
 * `show_progress = true`: if true, prints the progress of the computation to the terminal.
 * `projective_fusion = true`: if `true`, the algorithm computes which of the regions are fused at infinity.
@@ -159,7 +159,7 @@ regions(f)
 
 ## Example with options 
 ```julia
-regions(f; δ = 1e-5, 
+regions(f; δ = 1e-6, 
             monodromy_options = MonodromyOptions(max_loops_no_progress = 20))
 ```
 """
@@ -193,7 +193,7 @@ end
 function _regions(
     f0::System,
     progress::Union{Nothing,RegionsProgress};
-    δ::Float64 = 1e-5,
+    δ::Float64 = 1e-6,
     target_parameters::Union{Nothing, Vector{T1}} = nothing,
     s::Union{Nothing,Vector{T}} = nothing,
     epsilon::Float64 = 1e-6,

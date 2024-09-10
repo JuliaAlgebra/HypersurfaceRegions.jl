@@ -19,8 +19,9 @@ end
 # find the nearest point in a list to a given point
 function finding_nearest_point(v, list_of_vectors)
     v = reshape(v, length(v))
-    distances = [norm(v - x) for x in list_of_vectors]
-    if minimum(distances) < 1e-4
+    λ = LA.norm(v)
+    distances = [LA.norm(v - x) for x in list_of_vectors]
+    if minimum(distances) < 1e-4 * λ
         return argmin(distances)
     else
         return -1
