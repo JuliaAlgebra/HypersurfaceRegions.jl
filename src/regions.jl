@@ -88,16 +88,19 @@ end
 # output a point in the affine linear space in some unbounded region of R^n-V(f)
 function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     new_a = vcat(1, a)
+    λ = norm(new_a)
+    new_a_normed = new_a ./ λ
+
     @unique_var t
-    f_t = subs(f, HC.variables(f) => t * new_a)
+    f_t = subs(f, HC.variables(f) => t * new_a_normed)
     S = HC.solve([f_t], t; show_progress = false)
     R = first.(real_solutions(S))
 
     invδ = inv(δ)
     if δ > 0
-        filter!(r -> r < invδ && r > 0, R)
+        filter!(r -> r/λ < invδ && r > 0, R)
     elseif δ < 0
-        filter!(r -> r > invδ && r < 0, R)
+        filter!(r -> r/λ > invδ && r < 0, R)
     end
 
     if isempty(R)
@@ -110,19 +113,19 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
         elseif δ > 0 
             m = maximum(R)
             t = 5.0 * (m + 1) # relative increase of m
-            if t > invδ
-                t = sqrt(invδ * m)
+            if t/λ > invδ
+                t = sqrt(invδ * m) * λ
             end
         elseif δ < 0
             m = minimum(R)
             t = 5.0 * (m - 1) # relative decrease of m
-            if t < invδ
-                t = -sqrt(abs(invδ) * abs(m))
+            if t/λ < invδ
+                t = -sqrt(abs(invδ) * abs(m)) * λ
             end
         end
 
     end
-    return t * new_a
+    return t * new_a_normed
 end
 
 
@@ -190,6 +193,7 @@ end
 function _regions(
     f0::System,
     progress::Union{Nothing,RegionsProgress};
+    f_denom::Union{Nothing, Expression} = nothing,
     δ::Float64 = 1e-4,
     target_parameters::Union{Nothing, Vector{T1}} = nothing,
     s::Union{Nothing,Vector{T}} = nothing,
@@ -218,6 +222,7 @@ function _regions(
     affine_output = _affine_regions(
         f,
         progress;
+        f_denom = f_denom,
         s = s,
         target_parameters = nothing,
         epsilon = epsilon,
@@ -243,8 +248,13 @@ function _regions(
     @unique_var x0
     f0 = map(fᵢ -> get_f_infty(fᵢ, variable_list, x0), poly_list)
     F0 = System(f0, variables = variable_list[2:end], parameters = [x0])
+    if f_denom !== nothing
+        f_denom_infty = get_f_infty(f_denom, variable_list, x0)
+    else 
+        f_denom_infty = nothing
+    end
 
-    cpt, _ = compute_critical_points(F0, s, monodromy_options, progress, start_pair_using_newton; target_parameters = [[0.0], [δ], [-δ]], kwargs...)
+    cpt, _ = compute_critical_points(F0, f_denom_infty, s, monodromy_options, progress, start_pair_using_newton; target_parameters = [[0.0], [δ], [-δ]], kwargs...)
     
     # critical points at infinity
     critical_points_infty = real_solutions(first(cpt[1]))

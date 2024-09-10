@@ -18,7 +18,10 @@ affine_regions(f)
 ```
 """
 affine_regions(f::Vector{Expression}; kwargs...) = affine_regions(System(f); kwargs...)
-function affine_regions(f::System; show_progress::Bool = true, kwargs...)
+function affine_regions(f::System; 
+                        show_progress::Bool = true,
+                        kwargs...
+                        )
 
     #  ProgressMeter
     if show_progress
@@ -46,6 +49,7 @@ end
 function _affine_regions(
     f0::System,
     progress::Union{Nothing,RegionsProgress};
+    f_denom::Union{Nothing, Expression} = nothing,
     s::Union{Nothing,Vector{T}} = nothing,
     target_parameters::Union{Nothing, Vector{T1}} = nothing,
     epsilon::Float64 = 1e-6,
@@ -70,6 +74,7 @@ function _affine_regions(
     
     s = set_up_s(s,f)
     M_1, f_list = compute_critical_points(f,
+                        f_denom,
                         s,
                         monodromy_options,
                         progress,
@@ -164,6 +169,7 @@ Computes the critical points of the rational function using `HomotopyContinuatio
 """
 function compute_critical_points(
     f::System,
+    f_denom::Union{Nothing, Expression},
     s::Vector{T},
     monodromy_options::MonodromyOptions,
     progress::Union{Nothing,RegionsProgress},
@@ -190,10 +196,14 @@ function compute_critical_points(
         target_parameters = [target_parameters]
     end
 
-    f_denom = generate_random_degree_2(variable_list)
-    f_list = [f.expressions; f_denom]
-    k = length(f_list)
+    if isnothing(f_denom)
+        f_denom = generate_random_degree_2(variable_list)
+        f_list = [f.expressions; f_denom]
+    else
+        f_list = [f.expressions; f_denom]
 
+    end
+    k = length(f_list)
 
     start_monodromy!(progress)
     show_progress = !isnothing(progress)
