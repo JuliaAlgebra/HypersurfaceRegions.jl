@@ -88,16 +88,19 @@ end
 # output a point in the affine linear space in some unbounded region of R^n-V(f)
 function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     new_a = vcat(1, a)
+    λ = norm(new_a)
+    new_a_normed = new_a ./ λ
+
     @unique_var t
-    f_t = subs(f, HC.variables(f) => t * new_a)
+    f_t = subs(f, HC.variables(f) => t * new_a_normed)
     S = HC.solve([f_t], t; show_progress = false)
     R = first.(real_solutions(S))
 
     invδ = inv(δ)
     if δ > 0
-        filter!(r -> r < invδ && r > 0, R)
+        filter!(r -> λ * r < invδ && r > 0, R)
     elseif δ < 0
-        filter!(r -> r > invδ && r < 0, R)
+        filter!(r -> λ * r > invδ && r < 0, R)
     end
 
     if isempty(R)
@@ -110,19 +113,19 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
         elseif δ > 0 
             m = maximum(R)
             t = 5.0 * (m + 1) # relative increase of m
-            if t > invδ
-                t = sqrt(invδ * m)
+            if λ * t > invδ
+                t = sqrt(invδ * m) / λ
             end
         elseif δ < 0
             m = minimum(R)
             t = 5.0 * (m - 1) # relative decrease of m
-            if t < invδ
-                t = -sqrt(abs(invδ) * abs(m))
+            if λ * t < invδ
+                t = -sqrt(abs(invδ) * abs(m)) / λ
             end
         end
 
     end
-    return t * new_a
+    return t * new_a_normed
 end
 
 
