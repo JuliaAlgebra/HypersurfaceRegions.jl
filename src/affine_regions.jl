@@ -297,6 +297,7 @@ function compute_critical_points(
         start_parameters = parameters(M),
         target_parameters = all_target_parameters,
         show_progress = show_progress,
+        endgame_options = HC.EndgameOptions(; at_infinity_check = false),
         kwargs...,
     )
 
