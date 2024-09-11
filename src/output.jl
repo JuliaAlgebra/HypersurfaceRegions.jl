@@ -139,7 +139,7 @@ C = regions(f)
 p = projective_regions(C)
 ```
 """
-function projective_regions(C::RegionsResult) 
+function projective_regions(C::RegionsResult)
     c = regions(C)
     p = C.projective_regions
     P = map(p) do pᵢ
@@ -293,7 +293,7 @@ function Base.show(io::IO, C::RegionsResult; crop = true)
             end
             i += 1
         end
-        
+
     end
 
     ds = displaysize()
@@ -340,7 +340,7 @@ function Base.show(io::IO, C::Region)
     if isnothing(b)
         println(io, " χ = $χ, μ = $μ")
     elseif b == 0
-       println(io, "χ = $χ, μ = $μ, unbounded")
+        println(io, "χ = $χ, μ = $μ, unbounded")
     elseif b == 1
         println(io, "χ = $χ, μ = $μ, bounded")
     elseif b == 2

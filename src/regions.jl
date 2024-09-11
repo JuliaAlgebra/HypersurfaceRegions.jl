@@ -19,12 +19,12 @@ function get_f_infty(
     f::Expression,
     var_list::Vector{Variable},
     x0::Variable,
-    selected_variable::Variable = var_list[1]
+    selected_variable::Variable = var_list[1],
 )
     exponents, coeffs = exponents_coefficients(f, var_list)
     total_degf_each_term = sum(exponents, dims = 1)
     degf = maximum(total_degf_each_term)
-    
+
     poly = Expression(0)
     num_monomials = length(total_degf_each_term)
 
@@ -40,7 +40,7 @@ function get_f_infty(
         poly += monomial * x0^k
     end
 
-   
+
 
     result = get_f_affine(poly, var_list, selected_variable)
 
@@ -53,7 +53,18 @@ function get_f_infty(
 end
 
 
-function get_points_at_infinity(poly_list_infty, variable_list, progress, s, epsilon, reltol, abstol, monodromy_options, start_pair_using_newton, seed)
+function get_points_at_infinity(
+    poly_list_infty,
+    variable_list,
+    progress,
+    s,
+    epsilon,
+    reltol,
+    abstol,
+    monodromy_options,
+    start_pair_using_newton,
+    seed,
+)
     #
     if all(HC.degree.(poly_list_infty) .== 0)
         critical_points_infty = [randn(Float64, length(variable_list) - 1)]
@@ -96,7 +107,7 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     e, c = exponents_coefficients(f_t, [t])
     LA.normalize!(c)
 
-    f_t = sum(cᵢ * t^eᵢ for (eᵢ, cᵢ) in zip(e,c) if abs(cᵢ) > 1e-15) # remove almost zero terms
+    f_t = sum(cᵢ * t^eᵢ for (eᵢ, cᵢ) in zip(e, c) if abs(cᵢ) > 1e-15) # remove almost zero terms
 
     if degree(f_t) == 0
         t = 1.0
@@ -106,28 +117,28 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
 
         invδ = inv(δ)
         if δ > 0
-            filter!(r -> r/λ < invδ && r > 0, R)
+            filter!(r -> r / λ < invδ && r > 0, R)
         elseif δ < 0
-            filter!(r -> r/λ > invδ && r < 0, R)
+            filter!(r -> r / λ > invδ && r < 0, R)
         end
 
         if isempty(R)
-                t = 1.0
+            t = 1.0
         else
-            
+
             if δ == 0.0
                 m = max(abs(maximum(R)), abs(minimum(R)))
                 t = 5.0 * (m + 1) # relative increase of m
-            elseif δ > 0 
+            elseif δ > 0
                 m = maximum(R)
                 t = 5.0 * (m + 1) # relative increase of m
-                if t/λ > invδ
+                if t / λ > invδ
                     t = sqrt(invδ * m) * λ
                 end
             elseif δ < 0
                 m = minimum(R)
                 t = 5.0 * (m - 1) # relative decrease of m
-                if t/λ < invδ
+                if t / λ < invδ
                     t = -sqrt(abs(invδ) * abs(m)) * λ
                 end
             end
@@ -204,7 +215,7 @@ function _regions(
     f0::System,
     progress::Union{Nothing,RegionsProgress};
     δ::Float64 = 1e-6,
-    target_parameters::Union{Nothing, Vector{T1}} = nothing,
+    target_parameters::Union{Nothing,Vector{T1}} = nothing,
     s::Union{Nothing,Vector{T}} = nothing,
     epsilon::Float64 = 1e-6,
     reltol::Float64 = 1e-6,
@@ -214,7 +225,7 @@ function _regions(
     projective_fusion::Bool = true,
     seed = nothing,
     kwargs...,
-) where {T<:Real, T1<:Number}
+) where {T<:Real,T1<:Number}
 
     if isnothing(f0)
         f = f0
@@ -257,8 +268,16 @@ function _regions(
     f0 = map(fᵢ -> get_f_infty(fᵢ, variable_list, x0), poly_list)
     F0 = System(f0, variables = variable_list[2:end], parameters = [x0])
 
-    cpt, _ = compute_critical_points(F0, s, monodromy_options, progress, start_pair_using_newton; target_parameters = [[0.0], [δ], [-δ]], kwargs...)
-    
+    cpt, _ = compute_critical_points(
+        F0,
+        s,
+        monodromy_options,
+        progress,
+        start_pair_using_newton;
+        target_parameters = [[0.0], [δ], [-δ]],
+        kwargs...,
+    )
+
     # critical points at infinity
     critical_points_infty = real_solutions(first(cpt[1]))
     # critical points at one side of the strip
@@ -288,26 +307,29 @@ function _regions(
     ∇ = HC.differentiate(logg, variable_list)
     ∇logg = fixed(System(∇, variables = variable_list))
 
-    nall_crit = length(critical_points_infty) + length(critical_points_infty_1) + length(critical_points_infty_2)
+    nall_crit =
+        length(critical_points_infty) +
+        length(critical_points_infty_1) +
+        length(critical_points_infty_2)
     set_ncritical_points!(progress, nall_crit)
     j = 0
 
     unbounded = Vector{Int}()
     undecided = Vector{Int}()
     bounded = Vector{Int}()
-    
+
     # critical points at infinity
     for critical_point in critical_points_infty
         unbounded_point = point_unbounded(prod_f, critical_point, 0.0)
         C1 = _membership(affine_output, unbounded_point, ∇logg)
-        
-        if !isnothing(C1) 
+
+        if !isnothing(C1)
             region_1_index = number(C1)
             append!(unbounded, region_1_index)
 
             if projective_fusion
                 C2 = _membership(affine_output, -unbounded_point, ∇logg)
-                
+
                 if !isnothing(C2)
                     region_2_index = number(C2)
 
@@ -325,8 +347,8 @@ function _regions(
     for critical_point in critical_points_infty_1
         unbounded_point = point_unbounded(prod_f, critical_point, δ)
         C = _membership(affine_output, unbounded_point, ∇logg)
-        
-        if !isnothing(C) 
+
+        if !isnothing(C)
             if !in(number(C), unbounded)
                 append!(undecided, number(C))
             end
@@ -339,7 +361,7 @@ function _regions(
         unbounded_point = point_unbounded(prod_f, critical_point, -δ)
         C = _membership(affine_output, unbounded_point, ∇logg)
 
-        if !isnothing(C) 
+        if !isnothing(C)
             if !in(number(C), unbounded)
                 append!(undecided, number(C))
             end
@@ -349,7 +371,7 @@ function _regions(
         set_ncritical_points_classified!(progress, j)
     end
 
-   
+
     still_to_decide = setdiff(collect(1:N), vcat(unbounded, undecided))
     for i in still_to_decide
         C = R[i]
@@ -370,15 +392,24 @@ function _regions(
     R_new = Vector{Region}()
     for i in unbounded
         Rᵢ = R[i]
-        push!(R_new, Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 0, Rᵢ.region_number))
+        push!(
+            R_new,
+            Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 0, Rᵢ.region_number),
+        )
     end
     for i in bounded
         Rᵢ = R[i]
-        push!(R_new, Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 1, Rᵢ.region_number))
+        push!(
+            R_new,
+            Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 1, Rᵢ.region_number),
+        )
     end
     for i in undecided
         Rᵢ = R[i]
-        push!(R_new, Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 2, Rᵢ.region_number))
+        push!(
+            R_new,
+            Region(Rᵢ.sign, Rᵢ.χ, Rᵢ.μ, Rᵢ.critical_points, Rᵢ.g, 2, Rᵢ.region_number),
+        )
     end
 
 

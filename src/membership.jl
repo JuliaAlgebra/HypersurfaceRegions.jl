@@ -29,7 +29,7 @@ function membership(
     ∇logg::AS;
     kwargs...,
 ) where {AS<:AbstractSystem}
-  
+
     C = _membership(R, p, ∇logg; kwargs...)
 
     return C
