@@ -243,7 +243,7 @@ Returns the order of variables.
 """
 function variables(C::RegionsResult)
     f, _, _ = g(C)
-    HC.HC.variables(f)
+    HC.variables(f)
 end
 
 ###############
