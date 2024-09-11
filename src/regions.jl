@@ -125,6 +125,7 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
         end
 
     end
+    
     return t * new_a_normed
 end
 
