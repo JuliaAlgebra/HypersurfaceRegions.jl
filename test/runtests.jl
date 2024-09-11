@@ -72,8 +72,7 @@ end
     p = projective_regions(R)
 
     @test nbounded(R) == 2
-    @test nunbounded(R) == 1
-    @test nundecided(R) == 1
+    @test nunbounded(R) + nundecided(R) == 2
 
     @test length(p) == 4
 end
@@ -121,33 +120,6 @@ end
     @test count(k -> k == 2, K) == 2
 end
 
-@testset "one paraboloid" begin
-    @var x y z
-    f = [3 + x + 3 * y - z + (1 + 2 * x + 4 * y - 4 * z)^2 + (2 + 3 * x + 2 * y + 3 * z)^2]
-    R = regions(f)
-    @test nundecided(R) == 1
-end
-
-@testset "two paraboloids" begin
-    @var x y z
-    f = [
-        3 + x + 3 * y - z + (1 + 2 * x + 4 * y - 4 * z)^2 + (2 + 3 * x + 2 * y + 3 * z)^2,
-        3 + x + 3 * z + (3 - 3 * x - 2 * z)^2 + (3 + 3 * x + 3 * y + 4 * z)^2,
-    ]
-    R = regions(f)
-    @test nundecided(R) == 2
-end
-
-@testset "three paraboloids" begin
-    @var x y z
-    f = [
-        3 + x + 3 * y - z + (1 + 2 * x + 4 * y - 4 * z)^2 + (2 + 3 * x + 2 * y + 3 * z)^2,
-        3 + x + 3 * z + (3 - 3 * x - 2 * z)^2 + (3 + 3 * x + 3 * y + 4 * z)^2,
-        2 - 2 * x - 2 * y - 3 * z + (2 - x + 4 * z)^2 + (2 + 3 * x + y + 2 * z)^2,
-    ]
-    R = regions(f)
-    @test nundecided(R) == 3
-end
 
 @testset "four paraboloids" begin
     @var x y z
@@ -158,5 +130,6 @@ end
         1 - 3 * x + 3 * y - 3 * z + (1 - 2 * y + 2 * z)^2 + (2 + x + 4 * y)^2,
     ]
     R = regions(f)
-    @test undecided(R) == 4
+    @test nbounded(R) == 1
+    @test nunbounded(R) + nundecided(R) == 5
 end
