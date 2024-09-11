@@ -106,7 +106,7 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     f_t = subs(f, HC.variables(f) => t * new_a_normed) 
 
 
-    if degree(f_t) == 0
+    if HC.degree(f_t) == 0
         t = 1.0
     else
         S = HC.solve([f_t], t; show_progress = false)
