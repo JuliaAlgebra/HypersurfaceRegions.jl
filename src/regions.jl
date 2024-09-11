@@ -338,8 +338,12 @@ function _regions(
 
                     LG.add_edge!(graph, region_1_index, region_2_index)
                     append!(unbounded, region_2_index)
+                else
+                    @warn "One critical point at infinity could not be assigned to a region."
                 end
             end
+        else
+            @warn "One critical point at infinity could not be assigned to a region."
         end
 
         j += 1
