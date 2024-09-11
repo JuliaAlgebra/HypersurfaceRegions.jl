@@ -98,9 +98,9 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
 
     invδ = inv(δ)
     if δ > 0
-        filter!(r -> λ * r < invδ && r > 0, R)
+        filter!(r -> r/λ < invδ && r > 0, R)
     elseif δ < 0
-        filter!(r -> λ * r > invδ && r < 0, R)
+        filter!(r -> r/λ > invδ && r < 0, R)
     end
 
     if isempty(R)
@@ -113,14 +113,14 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
         elseif δ > 0 
             m = maximum(R)
             t = 5.0 * (m + 1) # relative increase of m
-            if λ * t > invδ
-                t = sqrt(invδ * m) / λ
+            if t/λ > invδ
+                t = sqrt(invδ * m) * λ
             end
         elseif δ < 0
             m = minimum(R)
             t = 5.0 * (m - 1) # relative decrease of m
-            if λ * t < invδ
-                t = -sqrt(abs(invδ) * abs(m)) / λ
+            if t/λ < invδ
+                t = -sqrt(abs(invδ) * abs(m)) * λ
             end
         end
 
