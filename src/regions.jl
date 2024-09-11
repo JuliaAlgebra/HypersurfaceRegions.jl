@@ -103,23 +103,18 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     new_a_normed = new_a ./ λ
 
     @unique_var t
-    f_t = subs(f, HC.variables(f) => t * new_a_normed) |> expand
-    # e, c = exponents_coefficients(f_t, [t])
-    # LA.normalize!(c)
+    f_t = subs(f, HC.variables(f) => t * new_a_normed) 
 
-    # f_t = sum(cᵢ * t^eᵢ for (eᵢ, cᵢ) in zip(e, c) if abs(cᵢ) > 1e-15) # remove almost zero terms
 
     if degree(f_t) == 0
         t = 1.0
     else
         S = HC.solve([f_t], t; show_progress = false)
         R = first.(real_solutions(S))
+        #filter!(r -> abs(r) < 1e15, R) 
 
         invδ = inv(δ)
-        # only work outside the strip around infinity
-        if δ == 0.0
-            filter!(r -> abs(r / λ) < invδ, R)
-        elseif δ > 0
+        if δ > 0
             filter!(r -> r > 0 && r / λ < invδ, R)
         elseif δ < 0
             filter!(r -> r < 0 && r / λ > invδ, R)
@@ -162,15 +157,18 @@ Input a list of hypersurfaces 'f = [f_1,...f_k]'.
 Outputs the regions in the complement of the hypersurface arrangement, whether they are bounded or not, their sign patterns, Euler characteristic and the indices of the critical points in each region.
 
 Options:
-* `δ::Float64 = 1e-8`: Parameter that defines the strip around infinity.
+* `bounded_check = false`: if true, the algorithm also computes if regions are bounded or unbounded.
 * `target_parameters`: Specify parameters of the [System](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/systems/) `f` (if its has any).
 * `show_progress = true`: if true, prints the progress of the computation to the terminal.
-* `projective_fusion = true`: if `true`, the algorithm computes which of the regions are fused at infinity.
 * `s`: exponents of the Morse function `f_1^(s_1) * ... * f_k^(s_k) * q^(s_k+1)`. Here, `s` is a list of integers `[s_1, ..., s_k, s_{k+1}]` such that `s_1, ..., s_k>0, s_{k+1}<0` and `2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)`.
 * `epsilon = 1e-6`: how close from each critical point do we do the path tracking.
 * `reltol = 1e-6`, `abstol = 1e-9`: parameters for the accuracy of the ODE solver.
 * `monodromy_options = MonodromyOptions(max_loops_no_progress = 25)`: pass options for [monodromy](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/monodromy/).
 * `start_pair_using_newton::Bool = false`: if true, the algorithm tries to compute a start pair for monodromy by using Newton's methods. Can reduce the number of critical points, but is less stable.
+
+Options for when `bounded_check = true`:
+* `δ::Float64 = 1e-8`: Parameter that defines the strip around infinity.
+* `projective_fusion = false`: if `true`, the algorithm computes which of the regions are fused at infinity.
 
 
 ##  Example
@@ -217,18 +215,19 @@ end
 function _regions(
     f0::System,
     progress::Union{Nothing,RegionsProgress};
+    target_parameters::Union{Nothing, Vector{T1}} = nothing,
+    bounded_check::Bool = false,
     δ::Float64 = 1e-8,
-    target_parameters::Union{Nothing,Vector{T1}} = nothing,
     s::Union{Nothing,Vector{T}} = nothing,
     epsilon::Float64 = 1e-6,
     reltol::Float64 = 1e-6,
     abstol::Float64 = 1e-9,
     monodromy_options = HC.MonodromyOptions(max_loops_no_progress = 10),
     start_pair_using_newton::Bool = false,
-    projective_fusion::Bool = true,
+    projective_fusion::Bool = false,
     seed = nothing,
     kwargs...,
-) where {T<:Real,T1<:Number}
+) where {T<:Real, T1<:Number}
 
     if isnothing(f0)
         f = f0
@@ -258,6 +257,36 @@ function _regions(
     if isnothing(affine_output)
         return nothing
     end
+
+    if bounded_check
+        return _regions_infinity(f, affine_output, progress; 
+                            δ = δ,
+                            s = s, 
+                            epsilon = epsilon,
+                            reltol = reltol,
+                            abstol = abstol,
+                            monodromy_options=monodromy_options, 
+                            start_pair_using_newton = start_pair_using_newton,
+                            projective_fusion = projective_fusion)
+    else
+        return affine_output
+    end
+end
+
+function _regions_infinity(
+    f::System,
+    affine_output,
+    progress::Union{Nothing,RegionsProgress};
+    δ::Float64 = 1e-8,
+    s::Union{Nothing,Vector{T}} = nothing,
+    epsilon::Float64 = 1e-6,
+    reltol::Float64 = 1e-6,
+    abstol::Float64 = 1e-9,
+    monodromy_options = HC.MonodromyOptions(max_loops_no_progress = 10),
+    start_pair_using_newton::Bool = false,
+    projective_fusion::Bool = false,
+    kwargs...,
+) where {T<:Real}
 
     ####
     # Stage 2: compute critical points at infinity

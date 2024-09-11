@@ -71,14 +71,14 @@ critical_points(C::Region) = C.critical_points
 """
     is_unbounded(C::Region)
 
-Returns a boolean that is `true`, if `C` is undecided. 
+Returns a boolean that is `true`, if `C` was labelled unbounded. 
 """
 is_unbounded(C::Region) = C.is_bounded == 0
 
 """
     is_bounded(C::Region)
 
-Returns a boolean that is `true`, if `C` is bounded. 
+Returns a boolean that is `true`, if `C`  was labelled bounded. 
 """
 is_bounded(C::Region) = C.is_bounded == 1
 
@@ -159,42 +159,42 @@ nregions(C::RegionsResult) = C.nregions
 """
     nbounded(C::RegionsResult)
 
-Returns the number of (weakly) bounded regions in `C`.
+Returns the number of regions in `C` that were labelled bounded (if that information was computed).
 """
 nbounded(C::RegionsResult) = count(is_bounded, regions(C))
 
 """
     nunbounded(C::RegionsResult)
 
-Returns the number of unbounded regions in `C`.
+Returns the number of regions in `C` that were labelled unbounded (if that information was computed).
 """
 nunbounded(C::RegionsResult) = count(is_unbounded, regions(C))
 
 """
     nundecided(C::RegionsResult)
 
-Returns the number of regions in `C`, where bounded or unbounded could not be decided.
+Returns the number of regions in `C`, where bounded or unbounded could not be decided (if that information was computed).
 """
 nundecided(C::RegionsResult) = count(is_undecided, regions(C))
 
 """
     bounded(C::RegionsResult)
 
-Returns the (weakly) bounded regions in `C`.
+Returns the regions in `C` that were labelled bounded.
 """
 bounded(C::RegionsResult) = filter(is_bounded, regions(C))
 
 """
     unbounded(C::RegionsResult)
 
-Returns the unbounded regions in `C`.
+Returns the regions in `C` that were labelled unbounded.
 """
 unbounded(C::RegionsResult) = filter(is_unbounded, regions(C))
 
 """
     undecided(C::RegionsResult)
 
-Returns the number of regions in `C`, where bounded or unbounded could not be decided.
+Returns the regions in `C` that were labelled undecided.
 """
 undecided(C::RegionsResult) = filter(is_undecided, regions(C))
 

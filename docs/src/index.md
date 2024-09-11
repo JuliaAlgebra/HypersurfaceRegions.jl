@@ -121,6 +121,7 @@ number
 
 Functions to call on [RegionsResult](@ref).
 ```@docs
+regions
 nregions
 nbounded
 nunbounded

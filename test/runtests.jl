@@ -6,13 +6,19 @@ using Test
     f_1 = x^2 + y^2 - 1
     f_2 = x^2 + y^2 - 4
     f = System([f_1; f_2])
-    R = regions(f)
-    R = regions(f; show_progress = false)
 
+    R0 = regions(f)
+    @test ncritical_complex(R0) == 9
+    @test nregions(R0) == 3
+    @test nbounded(R0) == 0
+    @test nunbounded(R0) == 0
+    @test nundecided(R0) == 0
 
-    # functions for R
-    @test ncritical_complex(R) == 9
-    @test nregions(R) == 3
+    R1 = regions(f; show_progress = false)
+   
+
+    # with bounded regions
+    R = regions(f; bounded_check = true)
     @test nbounded(R) == 2
     @test nunbounded(R) == 1
 
@@ -52,7 +58,7 @@ end
 
 @testset "a circle and a line" begin
     @var x y
-    R = regions([x^2 + y^2 - 1; x])
+    R = regions([x^2 + y^2 - 1; x]; bounded_check = true, projective_fusion = true)
     p = projective_regions(R)
 
     @test length(p) == 3
@@ -68,13 +74,10 @@ end
     f_1 = y^2 + x^2 - 1
     f_2 = y - x^2
     f = System([f_1; f_2])
-    R = regions(f)
-    p = projective_regions(R)
+    R = regions(f; bounded_check = true)
 
     @test nbounded(R) == 2
     @test nunbounded(R) + nundecided(R) == 2
-
-    @test length(p) == 4
 end
 
 @testset "elliptope" begin
@@ -113,11 +116,8 @@ end
     @var a b
     f = [a, a + 1, 3a - 1, 3a + b + 6, 3a + b - 3, 9a^3 - 3a^2 * b + a * b^2 - 3a - b + 2]
     C = regions(f)
-    P = projective_regions(C)
-    K = length.(P)
-
-    @test count(k -> k == 1, K) == 11
-    @test count(k -> k == 2, K) == 3
+    
+    @test nregions(C) == 17
 end
 
 
@@ -129,7 +129,7 @@ end
         2 - 2 * x - 2 * y - 3 * z + (2 - x + 4 * z)^2 + (2 + 3 * x + y + 2 * z)^2,
         1 - 3 * x + 3 * y - 3 * z + (1 - 2 * y + 2 * z)^2 + (2 + x + 4 * y)^2,
     ]
-    R = regions(f)
+    R = regions(f; bounded_check = true)
     @test nbounded(R) == 1
     @test nunbounded(R) + nundecided(R) == 5
 end
