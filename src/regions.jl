@@ -104,10 +104,10 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
 
     @unique_var t
     f_t = subs(f, HC.variables(f) => t * new_a_normed) |> expand
-    e, c = exponents_coefficients(f_t, [t])
-    LA.normalize!(c)
+    # e, c = exponents_coefficients(f_t, [t])
+    # LA.normalize!(c)
 
-    f_t = sum(cᵢ * t^eᵢ for (eᵢ, cᵢ) in zip(e, c) if abs(cᵢ) > 1e-15) # remove almost zero terms
+    # f_t = sum(cᵢ * t^eᵢ for (eᵢ, cᵢ) in zip(e, c) if abs(cᵢ) > 1e-15) # remove almost zero terms
 
     if degree(f_t) == 0
         t = 1.0
@@ -116,7 +116,10 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
         R = first.(real_solutions(S))
 
         invδ = inv(δ)
-        if δ > 0
+        # only work outside the strip around infinity
+        if δ == 0.0
+            filter!(r -> abs(r / λ) < invδ, R)
+        elseif δ > 0
             filter!(r -> r / λ < invδ && r > 0, R)
         elseif δ < 0
             filter!(r -> r / λ > invδ && r < 0, R)
