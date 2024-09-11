@@ -94,6 +94,8 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     @unique_var t
     f_t = subs(f, HC.variables(f) => t * new_a_normed) |> expand
     e, c = exponents_coefficients(f_t, [t])
+    LA.normalize!(c)
+
     f_t = sum(cᵢ * t^eᵢ for (eᵢ, cᵢ) in zip(e,c) if abs(cᵢ) > 1e-15) # remove almost zero terms
 
     if degree(f_t) == 0
