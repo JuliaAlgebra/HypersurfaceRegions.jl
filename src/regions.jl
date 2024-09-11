@@ -120,9 +120,9 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
         if δ == 0.0
             filter!(r -> abs(r / λ) < invδ, R)
         elseif δ > 0
-            filter!(r -> r / λ < invδ && r > 0, R)
+            filter!(r -> r > 0 && r / λ < invδ, R)
         elseif δ < 0
-            filter!(r -> r / λ > invδ && r < 0, R)
+            filter!(r -> r < 0 && r / λ > invδ, R)
         end
 
         if isempty(R)
