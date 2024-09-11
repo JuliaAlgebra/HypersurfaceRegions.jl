@@ -92,40 +92,47 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     new_a_normed = new_a ./ λ
 
     @unique_var t
-    f_t = subs(f, HC.variables(f) => t * new_a_normed)
-    S = HC.solve([f_t], t; show_progress = false)
-    R = first.(real_solutions(S))
+    f_t = subs(f, HC.variables(f) => t * new_a_normed) |> expand
+    e, c = exponents_coefficients(f_t, [t])
+    f_t = sum(cᵢ * t^eᵢ for (eᵢ, cᵢ) in zip(e,c) if abs(cᵢ) > 1e-15) # remove almost zero terms
 
-    invδ = inv(δ)
-    if δ > 0
-        filter!(r -> r/λ < invδ && r > 0, R)
-    elseif δ < 0
-        filter!(r -> r/λ > invδ && r < 0, R)
-    end
-
-    if isempty(R)
-            t = 1.0
+    if degree(f_t) == 0
+        t = 1.0
     else
-        
-        if δ == 0.0
-            m = max(abs(maximum(R)), abs(minimum(R)))
-            t = 5.0 * (m + 1) # relative increase of m
-        elseif δ > 0 
-            m = maximum(R)
-            t = 5.0 * (m + 1) # relative increase of m
-            if t/λ > invδ
-                t = sqrt(invδ * m) * λ
-            end
+        S = HC.solve([f_t], t; show_progress = false)
+        R = first.(real_solutions(S))
+
+        invδ = inv(δ)
+        if δ > 0
+            filter!(r -> r/λ < invδ && r > 0, R)
         elseif δ < 0
-            m = minimum(R)
-            t = 5.0 * (m - 1) # relative decrease of m
-            if t/λ < invδ
-                t = -sqrt(abs(invδ) * abs(m)) * λ
-            end
+            filter!(r -> r/λ > invδ && r < 0, R)
         end
 
+        if isempty(R)
+                t = 1.0
+        else
+            
+            if δ == 0.0
+                m = max(abs(maximum(R)), abs(minimum(R)))
+                t = 5.0 * (m + 1) # relative increase of m
+            elseif δ > 0 
+                m = maximum(R)
+                t = 5.0 * (m + 1) # relative increase of m
+                if t/λ > invδ
+                    t = sqrt(invδ * m) * λ
+                end
+            elseif δ < 0
+                m = minimum(R)
+                t = 5.0 * (m - 1) # relative decrease of m
+                if t/λ < invδ
+                    t = -sqrt(abs(invδ) * abs(m)) * λ
+                end
+            end
+
+        end
     end
-    
+
     return t * new_a_normed
 end
 
