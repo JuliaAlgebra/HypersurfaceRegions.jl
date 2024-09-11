@@ -249,7 +249,7 @@ end
 ###############
 ### Show ###
 ###############
-Base.show(C::RegionsResult; crop = true) = Base.show(stdout, R, crop = crop)
+Base.show(C::RegionsResult; crop = true) = Base.show(stdout, C, crop = crop)
 function Base.show(io::IO, C::RegionsResult; crop = true)
 
     header = "RegionsResult with $(C.nregions) regions:"
