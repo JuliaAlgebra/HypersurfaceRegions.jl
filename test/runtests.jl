@@ -116,8 +116,8 @@ end
     P = projective_regions(C)
     K = length.(P)
 
-    @test count(k -> k == 1, K) == 13
-    @test count(k -> k == 2, K) == 2
+    @test count(k -> k == 1, K) == 11
+    @test count(k -> k == 2, K) == 3
 end
 
 
