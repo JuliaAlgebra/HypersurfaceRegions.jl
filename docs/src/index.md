@@ -109,7 +109,6 @@ projective_regions
 
 Functions to call on [RegionsResult](@ref).
 ```@docs
-regions
 nregions
 nbounded
 nunbounded
