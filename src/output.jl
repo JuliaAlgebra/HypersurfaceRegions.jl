@@ -142,6 +142,9 @@ p = projective_regions(C)
 function projective_regions(C::RegionsResult)
     c = regions(C)
     p = C.projective_regions
+    if isnothing(p)
+        return p
+    end
     P = map(p) do pᵢ
         filter(ci -> in(number(ci), pᵢ), c)
     end

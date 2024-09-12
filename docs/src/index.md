@@ -101,23 +101,11 @@ Region
 
 ```@docs
 regions
-affine_regions
 projective_regions
 ```
 
 
 ## Documentation: Helper functions
-
-Functions to call on [Region](@ref).
-```@docs
-χ
-μ
-critical_points
-is_bounded
-is_unbounded
-is_undecided
-number
-```
 
 Functions to call on [RegionsResult](@ref).
 ```@docs
@@ -135,4 +123,14 @@ ncritical_complex
 ncritical_real
 g
 variables
+```
+
+Functions to call on [Region](@ref).
+```@docs
+χ
+μ
+critical_points
+is_bounded
+is_unbounded
+is_undecided
 ```
