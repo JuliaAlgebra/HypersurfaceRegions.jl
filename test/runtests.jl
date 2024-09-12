@@ -13,6 +13,7 @@ using Test
     @test nbounded(R0) == 0
     @test nunbounded(R0) == 0
     @test nundecided(R0) == 0
+    @test isnothing(projective_regions(R0))
 
     R1 = regions(f; show_progress = false)
    
@@ -115,9 +116,12 @@ end
 @testset "a net plane of sextics" begin
     @var a b
     f = [a, a + 1, 3a - 1, 3a + b + 6, 3a + b - 3, 9a^3 - 3a^2 * b + a * b^2 - 3a - b + 2]
-    C = regions(f)
+    C = regions(f; projective_fusion = true)
     
     @test nregions(C) == 17
+
+    P = projective_regions(C)
+    @test length(P) == 15 
 end
 
 

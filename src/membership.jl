@@ -59,6 +59,7 @@ function _membership(
     critical_point_index, failed_info =
         limit_critical_point(set_up_ode(∇logg), p, critical_points, reltol, abstol)
     if critical_point_index == -1
+        # println(failed_info)
         return nothing
     end
 
