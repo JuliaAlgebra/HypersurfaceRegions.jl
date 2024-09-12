@@ -38,20 +38,20 @@ julia> f_1 = x^2 + y^2 - 1;
 julia> f_2 = x^2 + y^2 - 4;
 julia> f = [f_1; f_2]
 julia> regions(f)
-RegionsResult with 3 regions:
-===============================
+egionsResult with 3 regions:
+=============================
 9 complex critical points
 5 real critical points
-╭──────────────┬─────────────────────────────────╮
-│ sign pattern │ regions                        │
-├──────────────┼─────────────────────────────────┤
-│ + +          │ number = 1                      │
-│              │ χ = 0, μ = [1, 1, 0], unbounded │
-│ - -          │ number = 1                      │
-│              │ χ = 1, μ = [1, 0, 0], bounded   │
-│ + -          │ number = 1                      │
-│              │ χ = 0, μ = [1, 1, 0], bounded   │
-╰──────────────┴─────────────────────────────────╯
+╭──────────────┬───────────────────────╮
+│ sign pattern │ regions               │
+├──────────────┼───────────────────────┤
+│ + +          │ number = 1            │
+│              │  χ = 0, μ = [1, 1, 0] │
+│ - -          │ number = 1            │
+│              │  χ = 1, μ = [1, 0, 0] │
+│ + -          │ number = 1            │
+│              │  χ = 0, μ = [1, 1, 0] │
+╰──────────────┴───────────────────────╯
 ```
 
 The output shows that $\mathcal U$ has three regions. The first region has sign pattern $++$. This means that, on this region, both $f_1$ and $f_2$ are positive. On the second region, both $f_1$ and $f_2$ are negative, so it is the contractible region in the middle. The software correctly reports that this region has Euler characteristic 1. The other two regions each have one hole and thus have Euler characteristic 0. 

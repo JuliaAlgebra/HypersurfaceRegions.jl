@@ -71,14 +71,14 @@ critical_points(C::Region) = C.critical_points
 """
     is_unbounded(C::Region)
 
-Returns a boolean that is `true`, if `C` is undecided. 
+Returns a boolean that is `true`, if `C` was labelled unbounded. 
 """
 is_unbounded(C::Region) = C.is_bounded == 0
 
 """
     is_bounded(C::Region)
 
-Returns a boolean that is `true`, if `C` is bounded. 
+Returns a boolean that is `true`, if `C`  was labelled bounded. 
 """
 is_bounded(C::Region) = C.is_bounded == 1
 
@@ -139,9 +139,12 @@ C = regions(f)
 p = projective_regions(C)
 ```
 """
-function projective_regions(C::RegionsResult) 
+function projective_regions(C::RegionsResult)
     c = regions(C)
     p = C.projective_regions
+    if isnothing(p)
+        return p
+    end
     P = map(p) do pᵢ
         filter(ci -> in(number(ci), pᵢ), c)
     end
@@ -159,42 +162,42 @@ nregions(C::RegionsResult) = C.nregions
 """
     nbounded(C::RegionsResult)
 
-Returns the number of (weakly) bounded regions in `C`.
+Returns the number of regions in `C` that were labelled bounded (if that information was computed).
 """
 nbounded(C::RegionsResult) = count(is_bounded, regions(C))
 
 """
     nunbounded(C::RegionsResult)
 
-Returns the number of unbounded regions in `C`.
+Returns the number of regions in `C` that were labelled unbounded (if that information was computed).
 """
 nunbounded(C::RegionsResult) = count(is_unbounded, regions(C))
 
 """
     nundecided(C::RegionsResult)
 
-Returns the number of regions in `C`, where bounded or unbounded could not be decided.
+Returns the number of regions in `C`, where bounded or unbounded could not be decided (if that information was computed).
 """
 nundecided(C::RegionsResult) = count(is_undecided, regions(C))
 
 """
     bounded(C::RegionsResult)
 
-Returns the (weakly) bounded regions in `C`.
+Returns the regions in `C` that were labelled bounded.
 """
 bounded(C::RegionsResult) = filter(is_bounded, regions(C))
 
 """
     unbounded(C::RegionsResult)
 
-Returns the unbounded regions in `C`.
+Returns the regions in `C` that were labelled unbounded.
 """
 unbounded(C::RegionsResult) = filter(is_unbounded, regions(C))
 
 """
     undecided(C::RegionsResult)
 
-Returns the number of regions in `C`, where bounded or unbounded could not be decided.
+Returns the regions in `C` that were labelled undecided.
 """
 undecided(C::RegionsResult) = filter(is_undecided, regions(C))
 
@@ -243,13 +246,13 @@ Returns the order of variables.
 """
 function variables(C::RegionsResult)
     f, _, _ = g(C)
-    HC.HC.variables(f)
+    HC.variables(f)
 end
 
 ###############
 ### Show ###
 ###############
-Base.show(C::RegionsResult; crop = true) = Base.show(stdout, R, crop = crop)
+Base.show(C::RegionsResult; crop = true) = Base.show(stdout, C, crop = crop)
 function Base.show(io::IO, C::RegionsResult; crop = true)
 
     header = "RegionsResult with $(C.nregions) regions:"
@@ -293,7 +296,7 @@ function Base.show(io::IO, C::RegionsResult; crop = true)
             end
             i += 1
         end
-        
+
     end
 
     ds = displaysize()
@@ -340,7 +343,7 @@ function Base.show(io::IO, C::Region)
     if isnothing(b)
         println(io, " χ = $χ, μ = $μ")
     elseif b == 0
-       println(io, "χ = $χ, μ = $μ, unbounded")
+        println(io, "χ = $χ, μ = $μ, unbounded")
     elseif b == 1
         println(io, "χ = $χ, μ = $μ, bounded")
     elseif b == 2

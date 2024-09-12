@@ -47,7 +47,7 @@ function _affine_regions(
     f0::System,
     progress::Union{Nothing,RegionsProgress};
     s::Union{Nothing,Vector{T}} = nothing,
-    target_parameters::Union{Nothing, Vector{T1}} = nothing,
+    target_parameters::Union{Nothing,Vector{T1}} = nothing,
     epsilon::Float64 = 1e-6,
     reltol::Float64 = 1e-6,
     abstol::Float64 = 1e-9,
@@ -55,26 +55,31 @@ function _affine_regions(
     start_pair_using_newton::Bool = false,
     seed = nothing,
     kwargs...,
-) where {T<:Real, T1<:Number}
+) where {T<:Real,T1<:Number}
 
     if isnothing(f0)
         f = f0
     else
-        variable_list = 
-        f = System(f0(HC.variables(f0), target_parameters), variables = HC.variables(f0))
+        variable_list =
+            f = System(
+                f0(HC.variables(f0), target_parameters),
+                variables = HC.variables(f0),
+            )
     end
 
     if !isnothing(seed)
         Random.seed!(seed)
     end
-    
-    s = set_up_s(s,f)
-    M_1, f_list = compute_critical_points(f,
-                        s,
-                        monodromy_options,
-                        progress,
-                        start_pair_using_newton;
-                        kwargs...)
+
+    s = set_up_s(s, f)
+    M_1, f_list = compute_critical_points(
+        f,
+        s,
+        monodromy_options,
+        progress,
+        start_pair_using_newton;
+        kwargs...,
+    )
     if isnothing(M_1)
         println("Couldn't solve the critical equations")
         return nothing
@@ -168,17 +173,17 @@ function compute_critical_points(
     monodromy_options::MonodromyOptions,
     progress::Union{Nothing,RegionsProgress},
     start_pair_using_newton::Bool;
-    target_parameters::Union{Nothing, Vector{T1}, Vector{Vector{T2}}} = nothing, 
+    target_parameters::Union{Nothing,Vector{T1},Vector{Vector{T2}}} = nothing,
     kwargs...,
-) where {T<:Real, T1,T2 <: Number}
+) where {T<:Real,T1,T2<:Number}
 
     variable_list = HC.variables(f)
     parameter_list = HC.parameters(f)
-    if isnothing(target_parameters) 
+    if isnothing(target_parameters)
         if length(parameter_list) > 0
             error("Number of parameters don't match.")
         end
-    elseif typeof(target_parameters) <: Vector{Vector{T}} where T<:Number
+    elseif typeof(target_parameters) <: Vector{Vector{T}} where {T<:Number}
         if length(target_parameters[1]) != length(parameter_list)
             error("Number of parameters don't match.")
         end
@@ -186,7 +191,7 @@ function compute_critical_points(
         error("Number of parameters don't match.")
     end
 
-    if typeof(target_parameters) <: Vector{T} where T<:Number
+    if typeof(target_parameters) <: Vector{T} where {T<:Number}
         target_parameters = [target_parameters]
     end
 
@@ -221,7 +226,7 @@ function compute_critical_points(
             options = monodromy_options,
             show_progress = show_progress,
         )
-        if isnothing(target_parameters) 
+        if isnothing(target_parameters)
             all_target_parameters = s
         else
             all_target_parameters = [[s; p] for p in target_parameters]
@@ -265,7 +270,8 @@ function compute_critical_points(
         if isnothing(target_parameters)
             all_target_parameters = [s; randn(ComplexF64, K - k); 0.0]
         else
-            all_target_parameters = [[s; randn(ComplexF64, K - k); 0.0; p] for p in target_parameters]
+            all_target_parameters =
+                [[s; randn(ComplexF64, K - k); 0.0; p] for p in target_parameters]
         end
     end
 
@@ -297,6 +303,7 @@ function compute_critical_points(
         start_parameters = parameters(M),
         target_parameters = all_target_parameters,
         show_progress = show_progress,
+        endgame_options = HC.EndgameOptions(; at_infinity_check = false),
         kwargs...,
     )
 
@@ -332,7 +339,8 @@ end
 function compute_parameter(J, variable_list, parameter_list, x0, q0)
     M =
         [
-            isa(entry, Expression) ? evaluate(entry, variable_list => x0, parameter_list => q0) : entry for
+            isa(entry, Expression) ?
+            evaluate(entry, variable_list => x0, parameter_list => q0) : entry for
             entry in J
         ] |> Matrix{ComplexF64}
     N = LinearAlgebra.nullspace(M)
