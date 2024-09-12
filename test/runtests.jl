@@ -133,7 +133,7 @@ end
         2 - 2 * x - 2 * y - 3 * z + (2 - x + 4 * z)^2 + (2 + 3 * x + y + 2 * z)^2,
         1 - 3 * x + 3 * y - 3 * z + (1 - 2 * y + 2 * z)^2 + (2 + x + 4 * y)^2,
     ]
-    R = regions(f; bounded_check = true)
+    R = regions(f; bounded_check = true, seed = 0x9914a145)
     @test nbounded(R) == 1
     @test nunbounded(R) + nundecided(R) == 5
 end
