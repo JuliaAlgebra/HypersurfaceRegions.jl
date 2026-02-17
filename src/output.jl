@@ -304,28 +304,32 @@ function Base.show(io::IO, C::RegionsResult; crop = true)
         ds = (k + 8, last(ds))
     end
 
+    h1 = PrettyTables.TextHighlighter(
+        (data, i, j) -> (last(data[i, j], 8) == " bounded"),
+        crayon"208",
+    )
+    h2 = PrettyTables.TextHighlighter(
+        (data, i, j) -> (last(data[i, j], 9) == "unbounded"),
+        crayon"blue",
+    )
+    h3 = PrettyTables.TextHighlighter(
+        (data, i, j) -> (last(data[i, j], 9) == "undecided"),
+        crayon"magenta",
+    )
 
-    h1 = Highlighter(
-        f = (data, i, j) -> (last(data[i, j], 8) == " bounded");
-        crayon = crayon"208",
-    )
-    h2 = Highlighter(
-        f = (data, i, j) -> (last(data[i, j], 9) == "unbounded");
-        crayon = crayon"blue",
-    )
-    h3 = Highlighter(
-        f = (data, i, j) -> (last(data[i, j], 9) == "undecided");
-        crayon = crayon"magenta",
-    )
+    style = PrettyTables.TextTableStyle(first_line_column_label = crayon"green")
 
     pretty_table(
+        io,
         table;
-        header = ["sign pattern", "regions"],
-        header_crayon = crayon"green",
-        tf = tf_unicode_rounded,
+        column_labels = ["sign pattern", "regions"],
+        style = style,
+        table_format = PrettyTables.TextTableFormat(
+            borders = PrettyTables.text_table_borders__unicode_rounded,
+        ),
         alignment = :l,
         display_size = ds,
-        highlighters = (h1, h2, h3),
+        highlighters = [h1, h2, h3],
     )
 end
 
