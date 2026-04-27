@@ -42,7 +42,7 @@ function limit_critical_point_fixed_time(
 
     y_0 = start_point
     tspan = (0.0, time)
-    prob = DE.ODEProblem(ode_log!, y_0, tspan)
+    prob = SciMLBase.ODEProblem(ode_log!, y_0, tspan)
     sol = DE.solve(prob, reltol = reltol, abstol = abstol)
     y_lim = sol(time)
     critical_point_index = finding_nearest_point(y_lim, real_sols)

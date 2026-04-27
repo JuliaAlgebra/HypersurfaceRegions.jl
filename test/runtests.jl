@@ -16,7 +16,7 @@ using Test
     @test isnothing(projective_regions(R0))
 
     R1 = regions(f; show_progress = false)
-   
+
 
     # with bounded regions
     R = regions(f; bounded_check = true)
@@ -117,11 +117,11 @@ end
     @var a b
     f = [a, a + 1, 3a - 1, 3a + b + 6, 3a + b - 3, 9a^3 - 3a^2 * b + a * b^2 - 3a - b + 2]
     C = regions(f; projective_fusion = true)
-    
+
     @test nregions(C) == 17
 
     P = projective_regions(C)
-    @test length(P) == 15 
+    @test length(P) == 15
 end
 
 
