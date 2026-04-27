@@ -103,7 +103,7 @@ function point_unbounded(f::Expression, a::Array{T}, δ) where {T<:Real}
     new_a_normed = new_a ./ λ
 
     @unique_var t
-    f_t = subs(f, HC.variables(f) => t * new_a_normed) 
+    f_t = subs(f, HC.variables(f) => t * new_a_normed)
 
 
     if HC.degree(f_t) == 0
@@ -213,7 +213,7 @@ end
 function _regions(
     f0::System,
     progress::Union{Nothing,RegionsProgress};
-    target_parameters::Union{Nothing, Vector{T1}} = nothing,
+    target_parameters::Union{Nothing,Vector{T1}} = nothing,
     bounded_check::Bool = false,
     δ::Float64 = 1e-5,
     s::Union{Nothing,Vector{T}} = nothing,
@@ -225,7 +225,7 @@ function _regions(
     projective_fusion::Bool = false,
     seed = nothing,
     kwargs...,
-) where {T<:Real, T1<:Number}
+) where {T<:Real,T1<:Number}
 
     if isnothing(f0)
         f = f0
@@ -256,21 +256,25 @@ function _regions(
         return nothing
     end
 
-    if bounded_check 
+    if bounded_check
         projective_fusion = true
     end
 
     if bounded_check || projective_fusion
-        return _regions_infinity(f, affine_output, progress; 
-                            δ = δ,
-                            s = s, 
-                            epsilon = epsilon,
-                            reltol = reltol,
-                            abstol = abstol,
-                            monodromy_options=monodromy_options, 
-                            start_pair_using_newton = start_pair_using_newton,
-                            projective_fusion = projective_fusion,
-                            bounded_check = bounded_check)
+        return _regions_infinity(
+            f,
+            affine_output,
+            progress;
+            δ = δ,
+            s = s,
+            epsilon = epsilon,
+            reltol = reltol,
+            abstol = abstol,
+            monodromy_options = monodromy_options,
+            start_pair_using_newton = start_pair_using_newton,
+            projective_fusion = projective_fusion,
+            bounded_check = bounded_check,
+        )
     else
         return affine_output
     end
@@ -303,8 +307,8 @@ function _regions_infinity(
     @unique_var x0
     f0 = map(fᵢ -> get_f_infty(fᵢ, variable_list, x0), poly_list)
     F0 = System(f0, variables = variable_list[2:end], parameters = [x0])
-    
-    if bounded_check 
+
+    if bounded_check
         cpt, _ = compute_critical_points(
             F0,
             s,
@@ -321,7 +325,7 @@ function _regions_infinity(
         critical_points_infty_1 = real_solutions(first(cpt[2]))
         # critical points at the other side of the strip
         critical_points_infty_2 = real_solutions(first(cpt[3]))
-    else 
+    else
         cpt, _ = compute_critical_points(
             F0,
             s,
@@ -368,8 +372,8 @@ function _regions_infinity(
     unbounded = Vector{Int}()
     undecided = Vector{Int}()
     bounded = Vector{Int}()
-    
-    f_infty = System(subs(f0, x0 => 0.0),variables = variable_list[2:end])
+
+    f_infty = System(subs(f0, x0 => 0.0), variables = variable_list[2:end])
 
 
     # critical points at infinity
@@ -404,14 +408,20 @@ function _regions_infinity(
         j += 1
         set_ncritical_points_classified!(progress, j)
     end
-    
+
     unique!(unbounded)
 
     if bounded_check
         # critical points at the strip around infinity
         for critical_point in critical_points_infty_1
             unbounded_point = point_unbounded(prod_f, critical_point, δ)
-            C = _membership(affine_output, unbounded_point, ∇logg, reltol = 1e-9, abstol = 1e-15)
+            C = _membership(
+                affine_output,
+                unbounded_point,
+                ∇logg,
+                reltol = 1e-9,
+                abstol = 1e-15,
+            )
             if !isnothing(C)
                 if !in(number(C), unbounded)
                     append!(undecided, number(C))
@@ -423,7 +433,13 @@ function _regions_infinity(
         end
         for critical_point in critical_points_infty_2
             unbounded_point = point_unbounded(prod_f, critical_point, -δ)
-            C = _membership(affine_output, unbounded_point, ∇logg, reltol = 1e-9, abstol = 1e-15)
+            C = _membership(
+                affine_output,
+                unbounded_point,
+                ∇logg,
+                reltol = 1e-9,
+                abstol = 1e-15,
+            )
             if !isnothing(C)
                 if !in(number(C), unbounded)
                     append!(undecided, number(C))

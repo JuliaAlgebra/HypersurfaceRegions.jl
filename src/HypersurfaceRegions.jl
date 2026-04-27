@@ -2,12 +2,12 @@ module HypersurfaceRegions
 
 import LinearAlgebra, LightGraphs, Random
 import HomotopyContinuation
-import DifferentialEquations, SciMLBase
+import OrdinaryDiffEq, SciMLBase
 import ProgressMeter
 using PrettyTables, Crayons
 
 const HC = HomotopyContinuation
-const DE = DifferentialEquations
+const DE = OrdinaryDiffEq
 const LA = LinearAlgebra
 const LG = LightGraphs
 const PM = ProgressMeter
