@@ -259,7 +259,7 @@ function compute_critical_points(
             )
 
             finish_monodromy!(progress)
-            return M_1
+            return M_1, f_list
         end
     end
 

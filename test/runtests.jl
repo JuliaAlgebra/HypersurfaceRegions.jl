@@ -17,6 +17,9 @@ using Test
 
     R1 = regions(f; show_progress = false)
 
+    Rnewton = regions(f; show_progress = false, start_pair_using_newton = true)
+    @test nregions(Rnewton) == 3
+
     Roptions = regions(
         f;
         show_progress = false,
