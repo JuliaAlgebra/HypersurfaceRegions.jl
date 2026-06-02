@@ -165,7 +165,8 @@ Options:
 * `epsilon = 1e-6`: how close from each critical point do we do the path tracking.
 * `reltol = 1e-6`, `abstol = 1e-9`: parameters for the accuracy of the ODE solver.
 * `monodromy_options = MonodromyOptions(max_loops_no_progress = 25)`: pass options for [monodromy](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/monodromy/).
-* `endgame_options = EndgameOptions()`, `tracker_options = TrackerOptions()`: pass options for path tracking.
+* `endgame_options = EndgameOptions()`: pass options for the endgame.
+* `monodromy_tracker_options = TrackerOptions()`, `solve_tracker_options = TrackerOptions()`: pass separate path-tracking options for monodromy and the final solve.
 * `solve_kwargs = NamedTuple()`: pass additional keyword arguments to `HomotopyContinuation.solve`. Other extra keyword arguments are passed to `HomotopyContinuation.monodromy_solve`.
 * `start_pair_using_newton::Bool = false`: if true, the algorithm tries to compute a start pair for monodromy by using Newton's methods. Can reduce the number of critical points, but is less stable.
 
@@ -224,7 +225,8 @@ function _regions(
     abstol::Float64 = 1e-9,
     monodromy_options = HC.MonodromyOptions(max_loops_no_progress = 10),
     endgame_options = HC.EndgameOptions(),
-    tracker_options = HC.TrackerOptions(),
+    monodromy_tracker_options = HC.TrackerOptions(),
+    solve_tracker_options = HC.TrackerOptions(),
     solve_kwargs::NamedTuple = NamedTuple(),
     start_pair_using_newton::Bool = false,
     projective_fusion::Bool = false,
@@ -254,7 +256,8 @@ function _regions(
         abstol = abstol,
         monodromy_options = monodromy_options,
         endgame_options = endgame_options,
-        tracker_options = tracker_options,
+        monodromy_tracker_options = monodromy_tracker_options,
+        solve_tracker_options = solve_tracker_options,
         solve_kwargs = solve_kwargs,
         start_pair_using_newton = start_pair_using_newton,
         seed = seed,
@@ -281,7 +284,8 @@ function _regions(
             abstol = abstol,
             monodromy_options = monodromy_options,
             endgame_options = endgame_options,
-            tracker_options = tracker_options,
+            monodromy_tracker_options = monodromy_tracker_options,
+            solve_tracker_options = solve_tracker_options,
             solve_kwargs = solve_kwargs,
             start_pair_using_newton = start_pair_using_newton,
             projective_fusion = projective_fusion,
@@ -304,7 +308,8 @@ function _regions_infinity(
     abstol::Float64 = 1e-9,
     monodromy_options = HC.MonodromyOptions(max_loops_no_progress = 10),
     endgame_options = HC.EndgameOptions(),
-    tracker_options = HC.TrackerOptions(),
+    monodromy_tracker_options = HC.TrackerOptions(),
+    solve_tracker_options = HC.TrackerOptions(),
     solve_kwargs::NamedTuple = NamedTuple(),
     start_pair_using_newton::Bool = false,
     projective_fusion::Bool = true,
@@ -333,7 +338,8 @@ function _regions_infinity(
             target_parameters = [[0.0], [δ], [-δ]],
             monodromy_options = monodromy_options,
             endgame_options = endgame_options,
-            tracker_options = tracker_options,
+            monodromy_tracker_options = monodromy_tracker_options,
+            solve_tracker_options = solve_tracker_options,
             solve_kwargs = solve_kwargs,
             kwargs...,
         )
@@ -353,7 +359,8 @@ function _regions_infinity(
             target_parameters = [[0.0]],
             monodromy_options = monodromy_options,
             endgame_options = endgame_options,
-            tracker_options = tracker_options,
+            monodromy_tracker_options = monodromy_tracker_options,
+            solve_tracker_options = solve_tracker_options,
             solve_kwargs = solve_kwargs,
             kwargs...,
         )
