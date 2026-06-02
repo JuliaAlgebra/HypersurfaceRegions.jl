@@ -52,6 +52,9 @@ function _affine_regions(
     reltol::Float64 = 1e-6,
     abstol::Float64 = 1e-9,
     monodromy_options = HC.MonodromyOptions(max_loops_no_progress = 10),
+    endgame_options = HC.EndgameOptions(),
+    tracker_options = HC.TrackerOptions(),
+    solve_kwargs::NamedTuple = NamedTuple(),
     start_pair_using_newton::Bool = false,
     seed = nothing,
     kwargs...,
@@ -75,9 +78,12 @@ function _affine_regions(
     M_1, f_list = compute_critical_points(
         f,
         s,
-        monodromy_options,
         progress,
         start_pair_using_newton;
+        endgame_options = endgame_options,
+        tracker_options = tracker_options,
+        monodromy_options = monodromy_options,
+        solve_kwargs = solve_kwargs,
         kwargs...,
     )
     if isnothing(M_1)
@@ -170,11 +176,14 @@ Computes the critical points of the rational function using `HomotopyContinuatio
 function compute_critical_points(
     f::System,
     s::Vector{T},
-    monodromy_options::MonodromyOptions,
     progress::Union{Nothing,RegionsProgress},
     start_pair_using_newton::Bool;
     target_parameters::Union{Nothing,Vector{T1},Vector{Vector{T2}}} = nothing,
-    kwargs...,
+    endgame_options = HC.EndgameOptions(),
+    tracker_options = HC.TrackerOptions(),
+    monodromy_options = HC.MonodromyOptions(),
+    solve_kwargs::NamedTuple = NamedTuple(),
+    monodromy_kwargs...,
 ) where {T<:Real,T1,T2<:Number}
 
     variable_list = HC.variables(f)
@@ -224,7 +233,9 @@ function compute_critical_points(
         M = HC.monodromy_solve(
             S;
             options = monodromy_options,
+            tracker_options = tracker_options,
             show_progress = show_progress,
+            monodromy_kwargs...,
         )
         if isnothing(target_parameters)
             all_target_parameters = s
@@ -236,9 +247,11 @@ function compute_critical_points(
                 S,
                 solutions(M);
                 start_parameters = parameters(M),
+                endgame_options = endgame_options,
+                tracker_options = tracker_options,
                 target_parameters = all_target_parameters,
                 show_progress = show_progress,
-                kwargs...,
+                solve_kwargs...,
             )
 
             finish_monodromy!(progress)
@@ -263,8 +276,9 @@ function compute_critical_points(
             [x1],
             [p1; 1.0; q1];
             options = monodromy_options,
+            tracker_options = tracker_options,
             show_progress = show_progress,
-            kwargs...,
+            monodromy_kwargs...,
         )
 
         if isnothing(target_parameters)
@@ -280,8 +294,9 @@ function compute_critical_points(
         M = HC.monodromy_solve(
             S;
             options = monodromy_options,
+            tracker_options = tracker_options,
             show_progress = show_progress,
-            kwargs...,
+            monodromy_kwargs...,
         )
 
         finish_monodromy!(progress)
@@ -303,8 +318,9 @@ function compute_critical_points(
         start_parameters = parameters(M),
         target_parameters = all_target_parameters,
         show_progress = show_progress,
-        endgame_options = HC.EndgameOptions(; at_infinity_check = false),
-        kwargs...,
+        endgame_options = endgame_options,
+        tracker_options = tracker_options,
+        solve_kwargs...,
     )
 
     finish_monodromy!(progress)

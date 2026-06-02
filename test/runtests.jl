@@ -17,6 +17,16 @@ using Test
 
     R1 = regions(f; show_progress = false)
 
+    Roptions = regions(
+        f;
+        show_progress = false,
+        endgame_options = EndgameOptions(; endgame_start = 0.0),
+        tracker_options = TrackerOptions(; max_steps = 10_000),
+        solve_kwargs = (; threading = false),
+        parameter_sampler = p -> 2 .* randn(ComplexF64, length(p)),
+    )
+    @test nregions(Roptions) == 3
+
 
     # with bounded regions
     R = regions(f; bounded_check = true)
