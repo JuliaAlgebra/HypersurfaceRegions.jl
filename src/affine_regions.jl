@@ -93,8 +93,7 @@ function _affine_regions(
         return nothing
     end
 
-    real_M = filter(is_real, results(M))
-    real_sols = real.(map(solution, real_M))
+    real_sols = real_solutions(M)
 
     f_denom = f_list[end]
     variable_list = HC.variables(f)
@@ -152,7 +151,7 @@ function _affine_regions(
     return RegionsResult(
         regions,
         length(regions),
-        nsolutions(M),
+        nnonsingular(M),
         length(real_sols),
         nothing,
         g,
@@ -330,25 +329,40 @@ function compute_critical_points(
         solve_kwargs...,
     )
 
-    if nsolutions(M_1) > 0
-        if isnothing(target_parameters)
-            all_target_parameters = s
-        else
-            all_target_parameters = [[s; p] for p in target_parameters]
+    if M_1 isa Result
+        if nsolutions(M_1) > 0
+            if isnothing(target_parameters)
+                all_target_parameters = s
+            else
+                all_target_parameters = [[s; p] for p in target_parameters]
+            end
+
+            M_2 = HC.monodromy_solve(
+                S,
+                solutions(M_1),
+                all_target_parameters;
+                options = monodromy_options,
+                tracker_options = monodromy_tracker_options,
+                show_progress = show_progress,
+                monodromy_kwargs...,
+            )
+
+            M_3 = HC.solve(
+                S,
+                solutions(M_2);
+                start_parameters = all_target_parameters,
+                target_parameters = all_target_parameters,
+                show_progress = show_progress,
+                endgame_options = endgame_options,
+                tracker_options = solve_tracker_options,
+                solve_kwargs...,
+            )
+
+            finish_monodromy!(progress)
+            return M_3, f_list
         end
-
-        M_2 = HC.monodromy_solve(
-            S,
-            solutions(M_1),
-            all_target_parameters;
-            options = monodromy_options,
-            tracker_options = monodromy_tracker_options,
-            show_progress = show_progress,
-            monodromy_kwargs...,
-        )
-
-        finish_monodromy!(progress)
-        return M_2, f_list
+    else
+        return M_1, f_list
     end
 
     finish_monodromy!(progress)
