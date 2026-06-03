@@ -164,7 +164,7 @@ Options:
 * `s`: exponents of the Morse function `f_1^(s_1) * ... * f_k^(s_k) * q^(s_k+1)`. Here, `s` is a list of integers `[s_1, ..., s_k, s_{k+1}]` such that `s_1, ..., s_k>0, s_{k+1}<0` and `2 s_{k+1} > s_1 deg(f_1) + ... + s_k deg(f_k)`.
 * `epsilon = 1e-6`: how close from each critical point do we do the path tracking.
 * `reltol = 1e-6`, `abstol = 1e-9`: parameters for the accuracy of the ODE solver.
-* `monodromy_options = MonodromyOptions(max_loops_no_progress = 25)`: pass options for [monodromy](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/monodromy/).
+* `monodromy_options = MonodromyOptions(max_loops_no_progress = 10)`: pass options for [monodromy](https://www.juliahomotopycontinuation.org/HomotopyContinuation.jl/stable/monodromy/).
 * `endgame_options = EndgameOptions()`: pass options for the endgame.
 * `monodromy_tracker_options = TrackerOptions()`, `solve_tracker_options = TrackerOptions()`: pass separate path-tracking options for monodromy and the final solve.
 * `solve_kwargs = NamedTuple()`: pass additional keyword arguments to `HomotopyContinuation.solve`. Other extra keyword arguments are passed to `HomotopyContinuation.monodromy_solve`.
