@@ -232,23 +232,42 @@ function compute_critical_points(
     Df = HC.differentiate(Lu, variable_list)
     J = HC.differentiate(Df, u)
     S = System(Df, variables = variable_list, parameters = [u; parameter_list])
+    success = true
 
-    if start_pair_using_newton
-        M = HC.monodromy_solve(
-            S;
-            options = monodromy_options,
-            tracker_options = monodromy_tracker_options,
-            show_progress = show_progress,
-            monodromy_kwargs...,
-        )
-        if isnothing(target_parameters)
-            all_target_parameters = s
-        else
-            all_target_parameters = [[s; p] for p in target_parameters]
-        end
-        if nsolutions(M) > 0
+    if !start_pair_using_newton
+        A = randn(n, k)
+        B = randn(n, K - k)
+        Df_t = Df + t .* (A * u + B * v)
+        J_t = [J + A B]
+
+        x1 = randn(ComplexF64, n)
+        q1 = randn(ComplexF64, m)
+        p1 = compute_parameter(J_t, variable_list, parameter_list, x1, q1)
+
+        if all(abs.(p1) .> 1e-6)
+            S_t = System(
+                Df_t,
+                variables = variable_list,
+                parameters = [u; v; t; parameter_list],
+            )
+            M = HC.monodromy_solve(
+                S_t,
+                [x1],
+                [p1; 1.0; q1];
+                options = monodromy_options,
+                tracker_options = monodromy_tracker_options,
+                show_progress = show_progress,
+                monodromy_kwargs...,
+            )
+
+            if isnothing(target_parameters)
+                all_target_parameters = [s; randn(ComplexF64, K - k); 0.0]
+            else
+                all_target_parameters =
+                    [[s; randn(ComplexF64, K - k); 0.0; p] for p in target_parameters]
+            end
             M_1 = HC.solve(
-                S,
+                S_t,
                 solutions(M);
                 start_parameters = parameters(M),
                 target_parameters = all_target_parameters,
@@ -258,45 +277,11 @@ function compute_critical_points(
                 solve_kwargs...,
             )
 
-            if nsolutions(M_1) > 0
-                M_2 = HC.monodromy_solve(
-                    S,
-                    solutions(M_1),
-                    all_target_parameters;
-                    options = monodromy_options,
-                    tracker_options = monodromy_tracker_options,
-                    show_progress = show_progress,
-                    monodromy_kwargs...,
-                )
-
-                finish_monodromy!(progress)
-                return M_2, f_list
-            end
+        else # fallback
+            success = false
         end
     end
-
-    A = randn(n, k)
-    B = randn(n, K - k)
-    Df_t = Df + t .* (A * u + B * v)
-    J_t = [J + A B]
-
-    x1 = randn(ComplexF64, n)
-    q1 = randn(ComplexF64, m)
-    p1 = compute_parameter(J_t, variable_list, parameter_list, x1, q1)
-
-    if all(abs.(p1) .> 1e-6) # first try
-        S_t =
-            System(Df_t, variables = variable_list, parameters = [u; v; t; parameter_list])
-        M = HC.monodromy_solve(
-            S_t,
-            [x1],
-            [p1; 1.0; q1];
-            options = monodromy_options,
-            tracker_options = monodromy_tracker_options,
-            show_progress = show_progress,
-            monodromy_kwargs...,
-        )
-    else # second try
+    if start_pair_using_newton || !success
         M = HC.monodromy_solve(
             S;
             options = monodromy_options,
@@ -304,30 +289,27 @@ function compute_critical_points(
             show_progress = show_progress,
             monodromy_kwargs...,
         )
+
+        if isnothing(target_parameters)
+            all_target_parameters = s
+        else
+            all_target_parameters = [[s; p] for p in target_parameters]
+        end
+        M_1 = HC.solve(
+            S,
+            solutions(M);
+            start_parameters = parameters(M),
+            target_parameters = all_target_parameters,
+            endgame_options = endgame_options,
+            tracker_options = solve_tracker_options,
+            show_progress = show_progress,
+            solve_kwargs...,
+        )
     end
 
-    if nsolutions(M) == 0 # give up
+    if nsolutions(M_1) == 0 # give up
         return nothing
     end
-
-    if isnothing(target_parameters)
-        all_target_parameters = [s; randn(ComplexF64, K - k); 0.0]
-    else
-        all_target_parameters =
-            [[s; randn(ComplexF64, K - k); 0.0; p] for p in target_parameters]
-    end
-
-
-    M_1 = HC.solve(
-        S_t,
-        solutions(M);
-        start_parameters = parameters(M),
-        target_parameters = all_target_parameters,
-        show_progress = show_progress,
-        endgame_options = endgame_options,
-        tracker_options = solve_tracker_options,
-        solve_kwargs...,
-    )
 
     if M_1 isa Result
         if nsolutions(M_1) > 0
