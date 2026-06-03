@@ -361,7 +361,7 @@ function compute_critical_points(
             finish_monodromy!(progress)
             return M_3, f_list
         end
-    else
+    else # this case is for bounded_check = true
         return M_1, f_list
     end
 
