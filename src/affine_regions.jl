@@ -260,6 +260,10 @@ function compute_critical_points(
                 monodromy_kwargs...,
             )
 
+            if nsolutions(M) == 0 # give up
+                return nothing
+            end
+
             if isnothing(target_parameters)
                 all_target_parameters = [s; randn(ComplexF64, K - k); 0.0]
             else
@@ -290,6 +294,10 @@ function compute_critical_points(
             monodromy_kwargs...,
         )
 
+        if nsolutions(M) == 0 # give up
+            return nothing
+        end
+        
         if isnothing(target_parameters)
             all_target_parameters = s
         else
@@ -307,9 +315,6 @@ function compute_critical_points(
         )
     end
 
-    if nsolutions(M_1) == 0 # give up
-        return nothing
-    end
 
     if M_1 isa Result
         if nsolutions(M_1) > 0
