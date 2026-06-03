@@ -261,7 +261,7 @@ function compute_critical_points(
             )
 
             if nsolutions(M) == 0 # give up
-                return nothing
+                return nothing, f_list
             end
 
             if isnothing(target_parameters)
@@ -285,7 +285,7 @@ function compute_critical_points(
             we_can_use_parameters = false
         end
     end
-    if start_pair_using_newton || !we_can_use_parameters 
+    if start_pair_using_newton || !we_can_use_parameters
         M = HC.monodromy_solve(
             S;
             options = monodromy_options,
@@ -295,9 +295,9 @@ function compute_critical_points(
         )
 
         if nsolutions(M) == 0 # give up
-            return nothing
+            return nothing, f_list
         end
-        
+
         if isnothing(target_parameters)
             all_target_parameters = s
         else
