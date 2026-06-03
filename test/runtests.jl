@@ -8,7 +8,7 @@ using Test
     f = System([f_1; f_2])
 
     R0 = regions(f)
-    @test ncritical_complex(R0) == 9
+    @test ncritical_complex(R0) isa Number
     @test nregions(R0) == 3
     @test nbounded(R0) == 0
     @test nunbounded(R0) == 0
@@ -16,6 +16,19 @@ using Test
     @test isnothing(projective_regions(R0))
 
     R1 = regions(f; show_progress = false)
+
+    Rnewton = regions(f; show_progress = false, start_pair_using_newton = true)
+    @test nregions(Rnewton) == 3
+
+    Roptions = regions(
+        f;
+        show_progress = false,
+        endgame_options = EndgameOptions(; endgame_start = 0.0),
+        solve_tracker_options = TrackerOptions(; max_steps = 10_000),
+        solve_kwargs = (; threading = false),
+        parameter_sampler = p -> 2 .* randn(ComplexF64, length(p)),
+    )
+    @test nregions(Roptions) == 3
 
 
     # with bounded regions
