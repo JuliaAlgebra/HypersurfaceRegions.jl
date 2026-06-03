@@ -76,7 +76,7 @@ function _affine_regions(
     end
 
     s = set_up_s(s, f)
-    M_1, f_list = compute_critical_points(
+    M, f_list = compute_critical_points(
         f,
         s,
         progress,
@@ -88,12 +88,13 @@ function _affine_regions(
         solve_kwargs = solve_kwargs,
         kwargs...,
     )
-    if isnothing(M_1)
+    if isnothing(M)
         println("Couldn't solve the critical equations")
         return nothing
     end
 
-    real_sols = real_solutions(M_1)
+    real_M = filter(is_real, results(M))
+    real_sols = real.(map(solution, real_M))
 
     f_denom = f_list[end]
     variable_list = HC.variables(f)
@@ -151,7 +152,7 @@ function _affine_regions(
     return RegionsResult(
         regions,
         length(regions),
-        nnonsingular(M_1),
+        nsolutions(M),
         length(real_sols),
         nothing,
         g,
@@ -231,9 +232,9 @@ function compute_critical_points(
     Lu = sum(u[i] * log(f_list[i]) for i = 1:k)
     Df = HC.differentiate(Lu, variable_list)
     J = HC.differentiate(Df, u)
+    S = System(Df, variables = variable_list, parameters = [u; parameter_list])
 
     if start_pair_using_newton
-        S = System(Df, variables = variable_list, parameters = [u; parameter_list])
         M = HC.monodromy_solve(
             S;
             options = monodromy_options,
@@ -251,18 +252,29 @@ function compute_critical_points(
                 S,
                 solutions(M);
                 start_parameters = parameters(M),
+                target_parameters = all_target_parameters,
                 endgame_options = endgame_options,
                 tracker_options = solve_tracker_options,
-                target_parameters = all_target_parameters,
                 show_progress = show_progress,
                 solve_kwargs...,
             )
 
-            finish_monodromy!(progress)
-            return M_1, f_list
+            if nsolutions(M_1) > 0
+                M_2 = HC.monodromy_solve(
+                    S,
+                    solutions(M_1),
+                    all_target_parameters;
+                    options = monodromy_options,
+                    tracker_options = monodromy_tracker_options,
+                    show_progress = show_progress,
+                    monodromy_kwargs...,
+                )
+
+                finish_monodromy!(progress)
+                return M_2, f_list
+            end
         end
     end
-
 
     A = randn(n, k)
     B = randn(n, K - k)
@@ -274,9 +286,10 @@ function compute_critical_points(
     p1 = compute_parameter(J_t, variable_list, parameter_list, x1, q1)
 
     if all(abs.(p1) .> 1e-6) # first try
-        S = System(Df_t, variables = variable_list, parameters = [u; v; t; parameter_list])
+        S_t =
+            System(Df_t, variables = variable_list, parameters = [u; v; t; parameter_list])
         M = HC.monodromy_solve(
-            S,
+            S_t,
             [x1],
             [p1; 1.0; q1];
             options = monodromy_options,
@@ -284,17 +297,7 @@ function compute_critical_points(
             show_progress = show_progress,
             monodromy_kwargs...,
         )
-
-        if isnothing(target_parameters)
-            all_target_parameters = [s; randn(ComplexF64, K - k); 0.0]
-        else
-            all_target_parameters =
-                [[s; randn(ComplexF64, K - k); 0.0; p] for p in target_parameters]
-        end
-    end
-
-    if nsolutions(M) == 0 # second try, if first failed
-        S = System(Df, variables = variable_list, parameters = [u; parameter_list])
+    else # second try
         M = HC.monodromy_solve(
             S;
             options = monodromy_options,
@@ -302,22 +305,22 @@ function compute_critical_points(
             show_progress = show_progress,
             monodromy_kwargs...,
         )
+    end
 
-        finish_monodromy!(progress)
-        if nsolutions(m) == 0 # give up
-            return nothing
-        end
+    if nsolutions(M) == 0 # give up
+        return nothing
+    end
 
-        if isnothing(target_parameters)
-            all_target_parameters = [s; p]
-        else
-            all_target_parameters = [[s; p] for p in target_parameters]
-        end
+    if isnothing(target_parameters)
+        all_target_parameters = [s; randn(ComplexF64, K - k); 0.0]
+    else
+        all_target_parameters =
+            [[s; randn(ComplexF64, K - k); 0.0; p] for p in target_parameters]
     end
 
 
     M_1 = HC.solve(
-        S,
+        S_t,
         solutions(M);
         start_parameters = parameters(M),
         target_parameters = all_target_parameters,
@@ -327,8 +330,29 @@ function compute_critical_points(
         solve_kwargs...,
     )
 
+    if nsolutions(M_1) > 0
+        if isnothing(target_parameters)
+            all_target_parameters = s
+        else
+            all_target_parameters = [[s; p] for p in target_parameters]
+        end
+
+        M_2 = HC.monodromy_solve(
+            S,
+            solutions(M_1),
+            all_target_parameters;
+            options = monodromy_options,
+            tracker_options = monodromy_tracker_options,
+            show_progress = show_progress,
+            monodromy_kwargs...,
+        )
+
+        finish_monodromy!(progress)
+        return M_2, f_list
+    end
+
     finish_monodromy!(progress)
-    return M_1, f_list
+    nothing
 end
 
 function set_up_s(s, f)
