@@ -232,7 +232,7 @@ function compute_critical_points(
     Df = HC.differentiate(Lu, variable_list)
     J = HC.differentiate(Df, u)
     S = System(Df, variables = variable_list, parameters = [u; parameter_list])
-    success = true
+    we_can_use_parameters = true
 
     if !start_pair_using_newton
         A = randn(n, k)
@@ -282,10 +282,10 @@ function compute_critical_points(
             )
 
         else # fallback
-            success = false
+            we_can_use_parameters = false
         end
     end
-    if start_pair_using_newton || !success
+    if start_pair_using_newton || !we_can_use_parameters 
         M = HC.monodromy_solve(
             S;
             options = monodromy_options,
