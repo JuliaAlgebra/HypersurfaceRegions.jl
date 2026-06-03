@@ -8,7 +8,7 @@ using Test
     f = System([f_1; f_2])
 
     R0 = regions(f)
-    @test ncritical_complex(R0) isa Vector
+    @test ncritical_complex(R0) isa Number
     @test nregions(R0) == 3
     @test nbounded(R0) == 0
     @test nunbounded(R0) == 0
